@@ -1,3 +1,5 @@
+from typing import Type
+
 import requests
 from datetime import datetime
 from pymongo import collection
@@ -6,6 +8,31 @@ import pytz
 from pydantic import BaseModel
 from enum import Enum
 from abc import ABC, abstractmethod
+
+
+class CurrencyType(Enum):
+    """Currency types: real or created by user"""
+
+    REAL = "real"
+    CUSTOM = "custom"
+
+
+class CurrencyItem(BaseModel):
+    """
+    Representation of a currency
+
+            Attributes:
+                    code (str): Currency code (3 letters)
+                    rate_usd (float): Conversion rate in USD
+                    type (CurrencyType): Currency type (real or custom)
+
+
+    """
+
+    code: str
+    rate_usd: float
+    type: str
+    update_time: datetime
 
 
 class CurrencyResponse(BaseModel):
@@ -46,10 +73,9 @@ class EconomiaAwesomeAPI(CurrencyAPI):
     @classmethod
     def get_conversion(cls, url: str, db: collection.Collection) -> None:
         response_json = requests.get(url).json()
-        utc_time = datetime.now().astimezone(pytz.utc)
-        currency_conversion_dict = {"Update time": utc_time}
         for item in response_json:
-            currency_conversion_dict.update(
-                {response_json[item].get("code"): response_json[item].get("bid")}
+            db.update_one(
+                {"code": response_json[item].get("code")},
+                {"$set": {"rate_usd": response_json[item].get("bid")}},
             )
-        db.insert_one(currency_conversion_dict)
+        print("Updated conversion rates (USD) successfully")

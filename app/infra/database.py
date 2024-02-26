@@ -1,9 +1,40 @@
 from pymongo import MongoClient
 from pymongo.collection import Collection
-from app.api.v1.models import CurrencyAPI, EconomiaAwesomeAPI
+from app.api.v1.models import (
+    CurrencyAPI,
+    EconomiaAwesomeAPI,
+    CurrencyItem,
+    CurrencyType,
+)
 from typing import Type
+from datetime import datetime
+import pytz
 
 DEFAULT_CURRENCIES = ("BRL", "EUR", "BTC", "ETH")
+utc_time = datetime.now().astimezone(pytz.utc)
+currencies = [
+    CurrencyItem(
+        code="BRL", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+    ),
+    CurrencyItem(
+        code="EUR", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+    ),
+    CurrencyItem(
+        code="BTC", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+    ),
+    CurrencyItem(
+        code="ETH", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+    ),
+    CurrencyItem(
+        code="USD", rate_usd=1, type=CurrencyType.REAL.value, update_time=utc_time
+    ),
+]
+
+
+def create_currency_list_document():
+    coll = mongodb_connect(collection="currency_list_info")
+    coll.insert_many([obj.dict() for obj in currencies])
+    return coll
 
 
 def mongodb_connect(
@@ -54,5 +85,6 @@ def update_conversion_collection(
 
 
 if __name__ == "__main__":
+    db2 = create_currency_list_document()
     db = mongodb_connect()
-    update_conversion_collection(db=db)
+    update_conversion_collection(db=db2)
