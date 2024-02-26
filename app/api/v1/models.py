@@ -4,7 +4,7 @@ from pymongo import collection
 
 import pytz
 from pydantic import BaseModel
-
+from enum import Enum
 from abc import ABC, abstractmethod
 
 
@@ -49,5 +49,7 @@ class EconomiaAwesomeAPI(CurrencyAPI):
         utc_time = datetime.now().astimezone(pytz.utc)
         currency_conversion_dict = {"Update time": utc_time}
         for item in response_json:
-            currency_conversion_dict.update({item: response_json[item].get("bid")})
+            currency_conversion_dict.update(
+                {response_json[item].get("code"): response_json[item].get("bid")}
+            )
         db.insert_one(currency_conversion_dict)
