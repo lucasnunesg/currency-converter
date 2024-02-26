@@ -10,23 +10,24 @@ from typing import Type
 from datetime import datetime
 import pytz
 
-DEFAULT_CURRENCIES = ("BRL", "EUR", "BTC", "ETH")
-utc_time = datetime.now().astimezone(pytz.utc)
+
+utc_time_now = datetime.now().astimezone(pytz.utc)
+
 currencies = [
     CurrencyItem(
-        code="BRL", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+        code="BRL", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time_now
     ),
     CurrencyItem(
-        code="EUR", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+        code="EUR", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time_now
     ),
     CurrencyItem(
-        code="BTC", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+        code="BTC", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time_now
     ),
     CurrencyItem(
-        code="ETH", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time
+        code="ETH", rate_usd=0, type=CurrencyType.REAL.value, update_time=utc_time_now
     ),
     CurrencyItem(
-        code="USD", rate_usd=1, type=CurrencyType.REAL.value, update_time=utc_time
+        code="USD", rate_usd=1, type=CurrencyType.REAL.value, update_time=utc_time_now
     ),
 ]
 
@@ -35,6 +36,10 @@ def create_currency_list_document():
     coll = mongodb_connect(collection="currency_list_info")
     coll.insert_many([obj.dict() for obj in currencies])
     return coll
+
+
+def update_currency_rate_document(collection: Collection) -> None:
+    collection.insert_many([obj.dict() for obj in currencies])
 
 
 def mongodb_connect(
@@ -69,7 +74,7 @@ def mongodb_connect(
 def update_conversion_collection(
     db: Collection,
     api: Type[CurrencyAPI] = EconomiaAwesomeAPI,
-    currency_list: list = DEFAULT_CURRENCIES,
+    currency_list: list = tuple([c.code for c in currencies if c.code != "USD"]),
 ) -> None:
     """
     Creates a new document in the provided collection with updated currency conversion values based on the provided
@@ -85,6 +90,6 @@ def update_conversion_collection(
 
 
 if __name__ == "__main__":
-    db2 = create_currency_list_document()
-    db = mongodb_connect()
-    update_conversion_collection(db=db2)
+    currency_rate_document = mongodb_connect(collection="currency_list_info")
+    update_currency_rate_document(currency_rate_document)
+    update_conversion_collection(db=currency_rate_document)
