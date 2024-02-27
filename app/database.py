@@ -2,7 +2,7 @@ from pymongo import MongoClient, DESCENDING
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
 
-from app.api.v1.models import (
+from api.v1.models import (
     CurrencyApiInterface,
     EconomiaAwesomeAPI,
     CurrencyItem,
