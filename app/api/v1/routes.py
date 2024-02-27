@@ -1,7 +1,4 @@
-import json
-
 from fastapi import APIRouter
-from app.infra.database import currencies
 
 router = APIRouter(prefix="/v1", tags=["V1"])
 
@@ -13,4 +10,4 @@ def convert(from_currency: str, to_currency: str, amount: float):
 
 @router.get("/available-currencies")
 def get_available_currencies():
-    return currencies
+    return {"currencies": "Available currencies"}
