@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 import uvicorn
-from app.api.v1 import routes
+from api.v1 import routes
 
 app = FastAPI(title="Currency Conversion")
 

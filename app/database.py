@@ -1,6 +1,6 @@
 from pymongo import MongoClient, DESCENDING
 from pymongo.collection import Collection
-from app.api.v1.models import (
+from api.v1.models import (
     CurrencyAPI,
     EconomiaAwesomeAPI,
     CurrencyItem,

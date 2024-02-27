@@ -1,0 +1,18 @@
+version: '3'
+
+services:
+  database:
+    image: mongo:latest
+    ports:
+      - "27017:27017"
+
+  web:
+    build: 
+      context: infra/  # Caminho para o diretório onde está o Dockerfile
+    command: sh -c "cd app/ && uvicorn main:app --reload --host=0.0.0.0 --port=8000"
+    ports:
+      - "8000:8000"
+    depends_on:
+      - database
+    volumes:
+      - ".:/app"
