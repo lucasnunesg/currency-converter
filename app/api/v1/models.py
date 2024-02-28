@@ -20,6 +20,15 @@ class CurrencyType(Enum):
     BACKING = "backing"
 
 
+class CurrencyItemResponse(BaseModel):
+    code: str
+    currency_type: str
+
+
+class CurrencyItemListResponse(BaseModel):
+    list_of_currencies: List[CurrencyItemResponse]
+
+
 class CurrencyItem(BaseModel):
     """
     Representation of a currency

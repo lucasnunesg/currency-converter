@@ -1,6 +1,7 @@
 from pymongo import MongoClient, DESCENDING
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
+from pprint import pprint
 
 from api.v1.models import (
     CurrencyApiInterface,
@@ -8,6 +9,7 @@ from api.v1.models import (
     CurrencyItem,
     CurrencyType,
     CurrencyList,
+    CurrencyResponse,
 )
 from typing import Type, List
 from datetime import datetime
@@ -156,9 +158,35 @@ def init_databases() -> List[Collection]:
 
 if __name__ == "__main__":
     [currency_rate_collection, tracked_currencies_collection] = init_databases()
-
     update_conversion_collection(
         rate_coll=currency_rate_collection,
         track_coll=tracked_currencies_collection,
         api=EconomiaAwesomeAPI,
     )
+
+    """
+    import json
+
+
+    all_documents_no_id = get_cursor_remove_fields(
+        tracked_currencies_collection, ["_id"]
+    )
+    currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
+    currency_list = CurrencyList(currency_item_list)
+    pprint(currency_list)
+    print(currency_list)
+    print(type(currency_list))
+    last_doc = get_last_updated_document(tracked_currencies_collection)
+    test_id = last_doc["_id"]
+    print("DOC: ", last_doc)
+    print("TEST ID: ", test_id)
+    test = CurrencyItem(
+        last_doc.get("code"), last_doc.get("rate_usd"), last_doc.get("currency_type")
+    )
+    print("TEST ITEM: ", test)
+    print(type(test))
+    del last_doc["_id"]
+    test2 = CurrencyItem(**last_doc)
+    print("TEST ITEM2: ", test2)
+    print(type(test2))
+    """
