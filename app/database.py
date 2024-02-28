@@ -1,3 +1,5 @@
+from json import dumps
+
 from pymongo import MongoClient, DESCENDING
 from pymongo.collection import Collection
 from pymongo.cursor import Cursor
@@ -23,7 +25,7 @@ def utc_time_now():
 def mongodb_connect(
     database: str = "database",
     collection: str = "collection",
-    host: str = "database",
+    host: str = "database",  # database for docker, localhost for local
     port: int = 27017,
 ) -> Collection:
     """
@@ -60,24 +62,25 @@ def get_cursor_remove_fields(collection: Collection, fields: List) -> Cursor:
     return collection.find({}, fields_to_be_removed)
 
 
-def from_tracked_to_rate(tracked_coll: Collection, rate_coll: Collection) -> None:
-    """Updates currencies of rate_coll based on all documents inside tracked_coll"""
+def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
+    dic = get_last_updated_document(rate_coll)
+    del dic["_id"]
+    currency_list = CurrencyList(dic.get("currencies"))
+    return currency_list
+
+
+def from_tracked_to_rate(
+    tracked_coll: Collection, rate_coll: Collection
+) -> CurrencyList:
+    """Updates currencies of rate_coll based on all documents inside tracked_coll, and returns a CurrencyList object"""
     all_documents_no_id = get_cursor_remove_fields(tracked_coll, ["_id"])
     currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
     currency_list = CurrencyList(currency_item_list)
     rate_coll.insert_one(currency_list.to_tracked_currencies_model())
-
-
-def add_tracked_currency(
-    code: str, rate_usd: float, collection: Collection
-) -> Collection:
-    """Adds a new currency provided by the user to the collection"""
-    collection.insert_one(
-        CurrencyItem(
-            code=code, rate_usd=rate_usd, currency_type=CurrencyType.CUSTOM.value
-        ).dict()
-    )
-    return collection
+    dic = get_last_updated_document(rate_coll)
+    del dic["_id"]
+    currency_list = CurrencyList(dic.get("currencies"))
+    return currency_list
 
 
 def update_conversion_collection(
@@ -96,8 +99,7 @@ def update_conversion_collection(
                     api (CurrencyApiInterface): API class (must be a valid CurrencyAPI subclass) to fetch external data
     """
 
-    from_tracked_to_rate(track_coll, rate_coll)
-    currency_list_object = parse_last_rate_document_to_object(rate_coll)
+    currency_list_object = from_tracked_to_rate(track_coll, rate_coll)
     real_currency_objects = currency_list_object.get_real_currencies()
     currency_list = real_currency_objects.get_currency_list()
     url = api.url_builder(currency_list)
@@ -109,15 +111,6 @@ def update_conversion_collection(
     last_two_documents_list = list(last_two_documents)
     penultimate_document = last_two_documents_list[1].get("_id")
     rate_coll.delete_one({"_id": penultimate_document})
-
-
-def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
-    """Converts the last document from a given collection into a CurrencyList object"""
-    dic = get_last_updated_document(rate_coll)
-    del dic["_id"]
-    currency_list = CurrencyList(dic.get("currencies"))
-
-    return currency_list
 
 
 def check_empty_collection(collection: Collection) -> bool:
@@ -164,16 +157,6 @@ update_conversion_collection(
     api=EconomiaAwesomeAPI,
 )
 
-
-def test_func():
-    all_documents_no_id = get_cursor_remove_fields(
-        tracked_currencies_collection, ["_id"]
-    )
-    currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
-    currency_list = CurrencyList(currency_item_list)
-    return currency_list
-
-
 if __name__ == "__main__":
     [currency_rate_collection, tracked_currencies_collection] = init_databases()
     update_conversion_collection(
@@ -182,6 +165,26 @@ if __name__ == "__main__":
         api=EconomiaAwesomeAPI,
     )
 
+    dic = get_last_updated_document(currency_rate_collection)
+    lista_currencies = dic.get("currencies")
+    lista_sem_id = [i for i in lista_currencies if i != "_id"]
+    cursor = currency_rate_collection.find().sort([("_id", -1)]).limit(1)
+    for i in lista_sem_id:
+        i.pop("_id")
+    print("LISTA SEM ID")
+    pprint(lista_sem_id)
+    b = 0
+    for i in lista_sem_id:
+        if i.get("code").upper() == "BRL":
+            b = i.get("rate_usd")
+    print(b)
+
+    """
+    def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
+    dic = get_last_updated_document(rate_coll)
+    del dic["_id"]
+    currency_list = CurrencyList(dic.get("currencies"))
+    return currency_list"""
     """
     import json
 
