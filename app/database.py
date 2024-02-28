@@ -23,7 +23,7 @@ def utc_time_now():
 def mongodb_connect(
     database: str = "database",
     collection: str = "collection",
-    host: str = "localhost",
+    host: str = "database",
     port: int = 27017,
 ) -> Collection:
     """
@@ -154,6 +154,24 @@ def init_databases() -> List[Collection]:
     if check_empty_collection(tracked_collection):
         populate_tracked_currencies(tracked_collection)
     return [rate_collection, tracked_collection]
+
+
+[currency_rate_collection, tracked_currencies_collection] = init_databases()
+
+update_conversion_collection(
+    rate_coll=currency_rate_collection,
+    track_coll=tracked_currencies_collection,
+    api=EconomiaAwesomeAPI,
+)
+
+
+def test_func():
+    all_documents_no_id = get_cursor_remove_fields(
+        tracked_currencies_collection, ["_id"]
+    )
+    currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
+    currency_list = CurrencyList(currency_item_list)
+    return currency_list
 
 
 if __name__ == "__main__":
