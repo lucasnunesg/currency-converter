@@ -56,7 +56,7 @@ class CurrencyList(BaseModel):
             ]
         )
 
-    def get_currency_rate(self):
+    def get_currency_rate(self) -> dict:
         """Returns a dict with currency code as key and usd_rate as values"""
         return {i.code: i.rate_usd for i in self.list_currency_items()}
 
@@ -82,10 +82,13 @@ class DatabaseCurrencyList(BaseModel):
     def return_currency_list_obj(self) -> CurrencyList:
         return CurrencyList(self.currencies.get("list_of_currencies"))
 
-    def get_currencies_list(self, all_currencies: bool = False):
+    def get_currencies_list(self, all_currencies: bool = False) -> list:
         if all_currencies:
             return self.return_currency_list_obj().get_currency_list()
         return self.return_currency_list_obj().get_real_currencies().get_currency_list()
+
+
+DatabaseCurrencyList.model_rebuild()
 
 
 class CurrencyApiInterface(ABC):
