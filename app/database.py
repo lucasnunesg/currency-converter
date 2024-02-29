@@ -105,7 +105,6 @@ def update_conversion_collection(
     db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
 
     rate_coll.insert_one(db_currency_list_obj.model_dump())
-    db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
     real_currencies_list = db_currency_list_obj.get_currencies_list()
 
     url = api.url_builder(real_currencies_list)

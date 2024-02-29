@@ -1,13 +1,12 @@
-from typing import List
-
-from api.v1.models import CurrencyItem, CurrencyList, CurrencyType, DatabaseCurrencyList
+from api.v1.models import CurrencyType, DatabaseCurrencyList
 from database import (
-    get_cursor_remove_fields,
     tracked_currencies_collection,
     currency_rate_collection,
     get_last_updated_document,
     update_conversion_collection,
 )
+from datetime import datetime, timedelta
+import pytz
 
 
 def fetch_all_currencies() -> dict:
@@ -35,23 +34,27 @@ def fetch_external_api() -> None:
 
 
 def fetch_conversion(source_currency: str, target_currency: str) -> float:
-    if source_currency == target_currency:
+    if source_currency.upper() == target_currency.upper():
         return 1
+    last_doc = get_last_updated_document(currency_rate_collection)
+    del last_doc["_id"]
+    obj = DatabaseCurrencyList(**last_doc)
+    if obj.update_time < datetime.now().astimezone(pytz.utc) - timedelta(minutes=10):
+        fetch_external_api()
+    cl = obj.return_currency_list_obj()
+    dic = cl.get_currency_rate()
+    print(dic)
 
-    def find_usd_rate(currency: str) -> float:
-        last_doc = get_last_updated_document(currency_rate_collection)
-        only_currencies = last_doc.get("currencies")
-        no_id_list = [i for i in only_currencies if i != "_id"]
-        for i in no_id_list:
-            i.pop("_id")
-        for i in no_id_list:
-            if i.get("code").upper() == currency:
-                return i.get("rate_usd")
+    def find_usd_rate(currency: str):
+        if currency == "USD":
+            return 1
+        else:
+            return dic.get(currency)
 
     if target_currency.upper() == "USD":
-        return float(find_usd_rate(source_currency))
-
-    return float(find_usd_rate(source_currency)) / float(find_usd_rate(target_currency))
+        return find_usd_rate(source_currency)
+    else:
+        return find_usd_rate(source_currency) / find_usd_rate(target_currency)
 
 
 def add_tracked_currency(code: str, rate_usd: float) -> None:
