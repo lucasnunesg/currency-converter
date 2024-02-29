@@ -11,6 +11,7 @@ from api.v1.models import (
     CurrencyItem,
     CurrencyType,
     CurrencyList,
+    DatabaseCurrencyList,
 )
 from typing import Type, List
 from datetime import datetime
@@ -70,10 +71,10 @@ def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
 """
 
 
-def from_tracked_to_rate(
+"""def from_tracked_to_rate(
     tracked_coll: Collection, rate_coll: Collection
 ) -> CurrencyList:
-    """Updates currencies of rate_coll based on all documents inside tracked_coll, and returns a CurrencyList object"""
+    #Updates currencies of rate_coll based on all documents inside tracked_coll, and returns a CurrencyList object
     all_documents_no_id = get_cursor_remove_fields(tracked_coll, ["_id"])
     currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
     currency_list = CurrencyList(currency_item_list)
@@ -81,7 +82,7 @@ def from_tracked_to_rate(
     dic = get_last_updated_document(rate_coll)
     del dic["_id"]
     currency_list = CurrencyList(dic.get("currencies"))
-    return currency_list
+    return currency_list"""
 
 
 def update_conversion_collection(
@@ -99,11 +100,14 @@ def update_conversion_collection(
                                             (will be used to fetch all registered currencies)
                     api (CurrencyApiInterface): API class (must be a valid CurrencyAPI subclass) to fetch external data
     """
+    updated_currencies = get_last_updated_document(track_coll)
+    del updated_currencies["_id"]
+    db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
+    rate_coll.insert_one(db_currency_list_obj.model_dump())
+    db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
+    real_currencies_list = db_currency_list_obj.get_currencies_list()
 
-    currency_list_object = from_tracked_to_rate(track_coll, rate_coll)
-    real_currency_objects = currency_list_object.get_real_currencies()
-    currency_list = real_currency_objects.get_currency_list()
-    url = api.url_builder(currency_list)
+    url = api.url_builder(real_currencies_list)
 
     api.get_conversion(url, rate_coll, track_coll)
 
@@ -134,9 +138,8 @@ def populate_tracked_currencies(tracked_collection: Collection) -> None:
             ),
         ]
     )
-    tracked_collection.insert_many(
-        [i.dict() for i in default_currencies.list_currency_items()]
-    )
+    database_currency_list_obj = DatabaseCurrencyList(currencies=default_currencies)
+    tracked_collection.insert_one(database_currency_list_obj.model_dump())
 
 
 def init_databases() -> List[Collection]:
@@ -166,7 +169,7 @@ if __name__ == "__main__":
         api=EconomiaAwesomeAPI,
     )
 
-    dic = get_last_updated_document(currency_rate_collection)
+    # dic = get_last_updated_document(currency_rate_collection)
     lista_currencies = dic.get("currencies")
     lista_sem_id = [i for i in lista_currencies if i != "_id"]
     cursor = currency_rate_collection.find().sort([("_id", -1)]).limit(1)

@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter
 
-from api.v1.models import CurrencyListResponse, CurrencyItemResponse
+from api.v1.models import DatabaseCurrencyListResponse
 from api.v1.services import (
     fetch_all_currencies,
     fetch_external_api,
@@ -10,20 +10,16 @@ from api.v1.services import (
     fetch_conversion,
     add_tracked_currency,
 )
-from database import update_conversion_collection
 
-# from database import init_databases
 router = APIRouter(prefix="/v1", tags=["V1"])
-
-# [currency_rate_collection, tracked_currencies_collection] = init_databases()
 
 
 @router.get("/")
-def convert(from_currency: str, to_currency: str, amount: float):
-    return {"from": f"{from_currency}", "to": f"{to_currency}", "amount": f"{amount}"}
+def hello():
+    return "Welcome to Currency Conversion API"
 
 
-@router.get("/available-currencies", response_model=List[CurrencyItemResponse])
+@router.get("/available-currencies")
 def get_available_currencies():
     return fetch_all_currencies()
 

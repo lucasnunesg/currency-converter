@@ -81,20 +81,28 @@ class CurrencyListResponse(BaseModel):
 class DatabaseCurrencyList(BaseModel):
     """Database representation (document) containing created/updated time and CurrencyList documents"""
 
-    last_update_time: datetime
+    update_time: datetime
     currencies: CurrencyList
 
     def __init__(
         self,
         currencies: CurrencyList,
-        created_time: datetime = datetime.now().astimezone(pytz.utc),
+        update_time: datetime = datetime.now().astimezone(pytz.utc),
     ) -> None:
-        super().__init__(created_time=created_time, currencies=currencies)
-        self.last_update_time = datetime.now().astimezone(pytz.utc)
+        super().__init__(update_time=update_time, currencies=currencies)
+        self.update_time = datetime.now().astimezone(pytz.utc)
         self.currencies = currencies
 
-    def update_time(self):
-        self.last_update_time = datetime.now().astimezone(pytz.utc)
+    def update_timestamp(self):
+        self.update_time = datetime.now().astimezone(pytz.utc)
+
+    def return_currency_list_obj(self) -> CurrencyList:
+        return CurrencyList(self.currencies.get("list_of_currencies"))
+
+    def get_currencies_list(self, all_currencies: bool = False):
+        if all_currencies:
+            return self.return_currency_list_obj().get_currency_list()
+        return self.return_currency_list_obj().get_real_currencies().get_currency_list()
 
 
 class DatabaseCurrencyListResponse(BaseModel):
@@ -140,21 +148,16 @@ class EconomiaAwesomeAPI(CurrencyApiInterface):
         cls, url: str, rate_coll: Collection, track_coll: Collection
     ) -> None:
         response_json = requests.get(url).json()
-
-        track_document_currency_list = [doc for doc in track_coll.find({})]
+        currency_list = []
 
         for item in response_json:
             item_code = response_json[item].get("code")
-            item_rate = response_json[item].get("bid")
+            item_rate = float(response_json[item].get("bid"))
 
-            for element in track_document_currency_list:
-                element_code = element.get("code")
-                if item_code == element_code:
-                    element["rate_usd"] = item_rate
+            ci = CurrencyItem(item_code, item_rate, CurrencyType.REAL.value)
+            currency_list.append(ci)
+        cl = CurrencyList(currency_list)
+        dcl = DatabaseCurrencyList(currencies=cl)
+        dcl.update_timestamp()
 
-        rate_coll.insert_one(
-            {
-                "update_time": datetime.now().astimezone(pytz.utc),
-                "currencies": track_document_currency_list,
-            }
-        )
+        rate_coll.insert_one(dcl.model_dump())

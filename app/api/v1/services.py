@@ -1,6 +1,6 @@
 from typing import List
 
-from api.v1.models import CurrencyItem, CurrencyList, CurrencyType
+from api.v1.models import CurrencyItem, CurrencyList, CurrencyType, DatabaseCurrencyList
 from database import (
     get_cursor_remove_fields,
     tracked_currencies_collection,
@@ -10,14 +10,11 @@ from database import (
 )
 
 
-def fetch_all_currencies() -> list:
-    all_documents_no_id = get_cursor_remove_fields(
-        tracked_currencies_collection, ["_id"]
-    )
-    currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
-    currency_list = CurrencyList(currency_item_list)
-    lista = currency_list.list_currency_items()
-    return lista
+def fetch_all_currencies() -> dict:
+    last_doc = get_last_updated_document(currency_rate_collection)
+    del last_doc["_id"]
+    obj = DatabaseCurrencyList(**last_doc)
+    return obj.get_currencies_list(all_currencies=True)
 
 
 def fetch_all_currency_rates() -> list:
