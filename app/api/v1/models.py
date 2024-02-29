@@ -159,5 +159,5 @@ class EconomiaAwesomeAPI(CurrencyApiInterface):
         cl = CurrencyList(currency_list)
         dcl = DatabaseCurrencyList(currencies=cl)
         dcl.update_timestamp()
-
+        #
         rate_coll.insert_one(dcl.model_dump())

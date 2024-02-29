@@ -11,7 +11,7 @@ from database import (
 
 
 def fetch_all_currencies() -> dict:
-    last_doc = get_last_updated_document(currency_rate_collection)
+    last_doc = get_last_updated_document(tracked_currencies_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
     return obj.get_currencies_list(all_currencies=True)
@@ -56,8 +56,15 @@ def fetch_conversion(source_currency: str, target_currency: str) -> float:
 
 def add_tracked_currency(code: str, rate_usd: float) -> None:
     """Adds a new currency provided by the user to the collection"""
-    tracked_currencies_collection.insert_one(
-        CurrencyItem(
-            code=code, rate_usd=rate_usd, currency_type=CurrencyType.CUSTOM.value
-        ).dict()
-    )
+    updated_currencies = get_last_updated_document(tracked_currencies_collection)
+    del updated_currencies["_id"]
+    db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
+    dic = db_currency_list_obj.model_dump()
+    new_currency = {
+        "code": code,
+        "currency_type": CurrencyType.CUSTOM.value,
+        "rate_usd": rate_usd,
+    }
+    updated_currencies.get("currencies").get("list_of_currencies").append(new_currency)
+
+    tracked_currencies_collection.insert_one(updated_currencies)
