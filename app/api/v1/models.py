@@ -1,15 +1,13 @@
-import json
-from typing import List
-
-import requests
-from pymongo.collection import Collection
-
-
-import pytz
-from pydantic import BaseModel
-from enum import Enum
 from abc import ABC, abstractmethod
 from datetime import datetime
+from enum import Enum
+from pprint import pprint
+from typing import List
+
+import pytz
+import requests
+from pydantic import BaseModel
+from pymongo.collection import Collection
 
 
 class CurrencyType(Enum):
@@ -18,15 +16,6 @@ class CurrencyType(Enum):
     REAL = "real"
     CUSTOM = "custom"
     BACKING = "backing"
-
-
-class CurrencyItemResponse(BaseModel):
-    code: str
-    currency_type: str
-
-
-class CurrencyItemListResponse(BaseModel):
-    list_of_currencies: List[CurrencyItemResponse]
 
 
 class CurrencyItem(BaseModel):
@@ -45,6 +34,11 @@ class CurrencyItem(BaseModel):
 
     def __init__(self, code: str, rate_usd: float, currency_type: str) -> None:
         super().__init__(code=code, rate_usd=rate_usd, currency_type=currency_type)
+
+
+class CurrencyItemResponse(BaseModel):
+    code: str
+    currency_type: str
 
 
 class CurrencyList(BaseModel):
@@ -75,10 +69,50 @@ class CurrencyList(BaseModel):
             ]
         )
 
+    def get_currency_rate(self):
+        """Returns a dict with currency code as key and usd_rate as values"""
+        return {i.code: i.rate_usd for i in self.list_currency_items()}
 
-class CurrencyResponse(BaseModel):
-    name: str
-    rate_usd: float
+
+class CurrencyListResponse(BaseModel):
+    list_of_currencies: List[CurrencyItemResponse]
+
+
+class DatabaseCurrencyList(BaseModel):
+    """Database representation (document) containing created/updated time and CurrencyList documents"""
+
+    last_update_time: datetime
+    currencies: CurrencyList
+
+    def __init__(
+        self,
+        currencies: CurrencyList,
+        created_time: datetime = datetime.now().astimezone(pytz.utc),
+    ) -> None:
+        super().__init__(created_time=created_time, currencies=currencies)
+        self.last_update_time = datetime.now().astimezone(pytz.utc)
+        self.currencies = currencies
+
+    def update_time(self):
+        self.last_update_time = datetime.now().astimezone(pytz.utc)
+
+
+class DatabaseCurrencyListResponse(BaseModel):
+    """Default Response of the API for the DatabaseCurrencyList model"""
+
+    currencies: CurrencyList
+
+
+ci1 = CurrencyItem("USD", 1.0, CurrencyType.BACKING.value)
+ci2 = CurrencyItem("BRL", 0.2011, CurrencyType.REAL.value)
+cl = CurrencyList([ci1, ci2])
+
+dbcl = DatabaseCurrencyList(currencies=cl)
+pprint(dbcl)
+print(type(dbcl))
+print(dbcl.model_dump())
+print(dbcl.update_time())
+print(dbcl)
 
 
 class CurrencyApiInterface(ABC):

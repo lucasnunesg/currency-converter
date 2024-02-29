@@ -2,7 +2,7 @@ from typing import List
 
 from fastapi import APIRouter
 
-from api.v1.models import CurrencyItemListResponse, CurrencyItemResponse
+from api.v1.models import CurrencyListResponse, CurrencyItemResponse
 from api.v1.services import (
     fetch_all_currencies,
     fetch_external_api,

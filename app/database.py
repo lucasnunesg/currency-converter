@@ -11,7 +11,6 @@ from api.v1.models import (
     CurrencyItem,
     CurrencyType,
     CurrencyList,
-    CurrencyResponse,
 )
 from typing import Type, List
 from datetime import datetime
@@ -62,11 +61,13 @@ def get_cursor_remove_fields(collection: Collection, fields: List) -> Cursor:
     return collection.find({}, fields_to_be_removed)
 
 
+"""
 def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
     dic = get_last_updated_document(rate_coll)
     del dic["_id"]
     currency_list = CurrencyList(dic.get("currencies"))
     return currency_list
+"""
 
 
 def from_tracked_to_rate(
@@ -178,36 +179,3 @@ if __name__ == "__main__":
         if i.get("code").upper() == "BRL":
             b = i.get("rate_usd")
     print(b)
-
-    """
-    def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
-    dic = get_last_updated_document(rate_coll)
-    del dic["_id"]
-    currency_list = CurrencyList(dic.get("currencies"))
-    return currency_list"""
-    """
-    import json
-
-
-    all_documents_no_id = get_cursor_remove_fields(
-        tracked_currencies_collection, ["_id"]
-    )
-    currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
-    currency_list = CurrencyList(currency_item_list)
-    pprint(currency_list)
-    print(currency_list)
-    print(type(currency_list))
-    last_doc = get_last_updated_document(tracked_currencies_collection)
-    test_id = last_doc["_id"]
-    print("DOC: ", last_doc)
-    print("TEST ID: ", test_id)
-    test = CurrencyItem(
-        last_doc.get("code"), last_doc.get("rate_usd"), last_doc.get("currency_type")
-    )
-    print("TEST ITEM: ", test)
-    print(type(test))
-    del last_doc["_id"]
-    test2 = CurrencyItem(**last_doc)
-    print("TEST ITEM2: ", test2)
-    print(type(test2))
-    """
