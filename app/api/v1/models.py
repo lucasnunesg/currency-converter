@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 from datetime import datetime
 from enum import Enum
-from pprint import pprint
 from typing import List
 
 import pytz
@@ -25,7 +24,7 @@ class CurrencyItem(BaseModel):
             Attributes:
                     code (str): Currency code (3 letters)
                     rate_usd (float): Conversion rate in USD
-                    type (CurrencyType): Currency type (real or custom)
+                    currency_type (CurrencyType): Currency type (real or custom)
     """
 
     code: str
@@ -34,11 +33,6 @@ class CurrencyItem(BaseModel):
 
     def __init__(self, code: str, rate_usd: float, currency_type: str) -> None:
         super().__init__(code=code, rate_usd=rate_usd, currency_type=currency_type)
-
-
-class CurrencyItemResponse(BaseModel):
-    code: str
-    currency_type: str
 
 
 class CurrencyList(BaseModel):
@@ -53,13 +47,6 @@ class CurrencyList(BaseModel):
     def list_currency_items(self) -> list:
         return [a for a in self.list_of_currencies]
 
-    def to_tracked_currencies_model(self) -> dict:
-        utc_time_now = datetime.now().astimezone(pytz.utc)
-        return {
-            "update_time": utc_time_now,
-            "currencies": [dict(i) for i in self.list_currency_items()],
-        }
-
     def get_real_currencies(self):
         return CurrencyList(
             [
@@ -72,10 +59,6 @@ class CurrencyList(BaseModel):
     def get_currency_rate(self):
         """Returns a dict with currency code as key and usd_rate as values"""
         return {i.code: i.rate_usd for i in self.list_currency_items()}
-
-
-class CurrencyListResponse(BaseModel):
-    list_of_currencies: List[CurrencyItemResponse]
 
 
 class DatabaseCurrencyList(BaseModel):
@@ -103,12 +86,6 @@ class DatabaseCurrencyList(BaseModel):
         if all_currencies:
             return self.return_currency_list_obj().get_currency_list()
         return self.return_currency_list_obj().get_real_currencies().get_currency_list()
-
-
-class DatabaseCurrencyListResponse(BaseModel):
-    """Default Response of the API for the DatabaseCurrencyList model"""
-
-    currencies: CurrencyList
 
 
 class CurrencyApiInterface(ABC):
@@ -148,16 +125,13 @@ class EconomiaAwesomeAPI(CurrencyApiInterface):
         cls, url: str, rate_coll: Collection, track_coll: Collection
     ) -> None:
         response_json = requests.get(url).json()
-        currency_list = []
-
-        for item in response_json:
-            item_code = response_json[item].get("code")
-            item_rate = float(response_json[item].get("bid"))
-
-            ci = CurrencyItem(item_code, item_rate, CurrencyType.REAL.value)
-            currency_list.append(ci)
-        cl = CurrencyList(currency_list)
-        dcl = DatabaseCurrencyList(currencies=cl)
-        dcl.update_timestamp()
-        #
-        rate_coll.insert_one(dcl.model_dump())
+        rates_dic = {
+            value["code"]: value["bid"] for key, value in response_json.items()
+        }
+        last_doc = rate_coll.find_one({}, sort=[("_id", -1)])
+        del last_doc["_id"]
+        c = last_doc.get("currencies").get("list_of_currencies")
+        for i in c:
+            if i.get("code") in rates_dic.keys():
+                i["rate_usd"] = rates_dic.get(i.get("code"))
+        rate_coll.insert_one(last_doc)

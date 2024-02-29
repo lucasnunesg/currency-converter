@@ -1,8 +1,5 @@
-from json import dumps
-
-from pymongo import MongoClient, DESCENDING
+from pymongo import MongoClient
 from pymongo.collection import Collection
-from pymongo.cursor import Cursor
 from pprint import pprint
 
 from api.v1.models import (
@@ -14,12 +11,6 @@ from api.v1.models import (
     DatabaseCurrencyList,
 )
 from typing import Type, List
-from datetime import datetime
-import pytz
-
-
-def utc_time_now():
-    return datetime.now().astimezone(pytz.utc)
 
 
 def mongodb_connect(
@@ -56,41 +47,13 @@ def get_last_updated_document(collection: Collection) -> dict:
     return collection.find_one({}, sort=[("_id", -1)])
 
 
-def get_cursor_remove_fields(collection: Collection, fields: List) -> Cursor:
-    """Returns a cursor object of a collection removing the fields specified on the given list"""
-    fields_to_be_removed = {f"{field}": 0 for field in fields}
-    return collection.find({}, fields_to_be_removed)
-
-
-"""
-def parse_last_rate_document_to_object(rate_coll: Collection) -> CurrencyList:
-    dic = get_last_updated_document(rate_coll)
-    del dic["_id"]
-    currency_list = CurrencyList(dic.get("currencies"))
-    return currency_list
-"""
-
-
-"""def from_tracked_to_rate(
-    tracked_coll: Collection, rate_coll: Collection
-) -> CurrencyList:
-    #Updates currencies of rate_coll based on all documents inside tracked_coll, and returns a CurrencyList object
-    all_documents_no_id = get_cursor_remove_fields(tracked_coll, ["_id"])
-    currency_item_list = [CurrencyItem.model_validate(i) for i in all_documents_no_id]
-    currency_list = CurrencyList(currency_item_list)
-    rate_coll.insert_one(currency_list.to_tracked_currencies_model())
-    dic = get_last_updated_document(rate_coll)
-    del dic["_id"]
-    currency_list = CurrencyList(dic.get("currencies"))
-    return currency_list"""
-
-
 def update_conversion_collection(
     rate_coll: Collection,
     track_coll: Collection,
     api: Type[CurrencyApiInterface] = EconomiaAwesomeAPI,
 ) -> None:
     """
+
     Takes all registered currencies on track_coll and creates a new document in rate_coll with updated currency
     conversion values based on the provided API instance.
 
@@ -168,17 +131,3 @@ if __name__ == "__main__":
         track_coll=tracked_currencies_collection,
         api=EconomiaAwesomeAPI,
     )
-
-    # dic = get_last_updated_document(currency_rate_collection)
-    lista_currencies = dic.get("currencies")
-    lista_sem_id = [i for i in lista_currencies if i != "_id"]
-    cursor = currency_rate_collection.find().sort([("_id", -1)]).limit(1)
-    for i in lista_sem_id:
-        i.pop("_id")
-    print("LISTA SEM ID")
-    pprint(lista_sem_id)
-    b = 0
-    for i in lista_sem_id:
-        if i.get("code").upper() == "BRL":
-            b = i.get("rate_usd")
-    print(b)

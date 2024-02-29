@@ -1,8 +1,5 @@
-from typing import List
-
 from fastapi import APIRouter
 
-from api.v1.models import DatabaseCurrencyListResponse
 from api.v1.services import (
     fetch_all_currencies,
     fetch_external_api,

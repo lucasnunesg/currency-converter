@@ -1,3 +1,7 @@
+from datetime import datetime, timedelta
+
+import pytz
+
 from api.v1.models import CurrencyType, DatabaseCurrencyList
 from database import (
     tracked_currencies_collection,
@@ -5,8 +9,6 @@ from database import (
     get_last_updated_document,
     update_conversion_collection,
 )
-from datetime import datetime, timedelta
-import pytz
 
 
 def fetch_all_currencies() -> dict:
@@ -39,11 +41,10 @@ def fetch_conversion(source_currency: str, target_currency: str) -> float:
     last_doc = get_last_updated_document(currency_rate_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
-    if obj.update_time < datetime.now().astimezone(pytz.utc) - timedelta(minutes=10):
+    if obj.update_time < datetime.now().astimezone(pytz.utc) - timedelta(minutes=2):
         fetch_external_api()
     cl = obj.return_currency_list_obj()
     dic = cl.get_currency_rate()
-    print(dic)
 
     def find_usd_rate(currency: str):
         if currency == "USD":
