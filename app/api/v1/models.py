@@ -103,18 +103,6 @@ class DatabaseCurrencyListResponse(BaseModel):
     currencies: CurrencyList
 
 
-ci1 = CurrencyItem("USD", 1.0, CurrencyType.BACKING.value)
-ci2 = CurrencyItem("BRL", 0.2011, CurrencyType.REAL.value)
-cl = CurrencyList([ci1, ci2])
-
-dbcl = DatabaseCurrencyList(currencies=cl)
-pprint(dbcl)
-print(type(dbcl))
-print(dbcl.model_dump())
-print(dbcl.update_time())
-print(dbcl)
-
-
 class CurrencyApiInterface(ABC):
     base_url: str
 
