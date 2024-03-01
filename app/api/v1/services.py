@@ -13,14 +13,14 @@ from app.database import (
 )
 
 
-def fetch_all_currencies() -> dict:
+def get_available_currencies_service() -> dict:
     last_doc = get_last_updated_document(tracked_currencies_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
     return obj.get_currencies_list(all_currencies=True)
 
 
-def fetch_all_currency_rates() -> list:
+def update_rates_service() -> list:
     last_doc = get_last_updated_document(currency_rate_collection)
     del last_doc["_id"]
     only_currencies = last_doc.get("currencies")
