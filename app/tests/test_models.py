@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 from enum import Enum
 from unittest.mock import MagicMock, patch
 
-
 import pytz
 
 from app.api.v1.models import (
@@ -44,114 +43,79 @@ class TestCurrencyList(unittest.TestCase):
     Test CurrencyList class
     """
 
+    @classmethod
+    def setUpClass(cls):
+        currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing")
+        currency_item_2 = CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real")
+        currency_item_3 = CurrencyItem(code="ABC", rate_usd=2, currency_type="custom")
+        cls.currency_list = CurrencyList(
+            list_of_currencies=[currency_item_1, currency_item_2, currency_item_3]
+        )
+
     def test_currency_list(self):
         """
         Test if CurrencyList instance is created properly
         """
-        currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="real")
-        currency_item_2 = CurrencyItem(code="EUR", rate_usd=0.9, currency_type="custom")
-        currency_list = CurrencyList(
-            list_of_currencies=[currency_item_1, currency_item_2]
-        )
-        self.assertEqual(len(currency_list.list_of_currencies), 2)
+        self.assertEqual(len(self.currency_list.list_of_currencies), 3)
 
     def test_get_currency_list(self):
         """
         Test get_currency_list method
         """
-        currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="real")
-        currency_item_2 = CurrencyItem(code="EUR", rate_usd=0.9, currency_type="custom")
-        currency_list = CurrencyList(
-            list_of_currencies=[currency_item_1, currency_item_2]
-        )
-        self.assertEqual(currency_list.get_currency_list(), ["USD", "EUR"])
+        self.assertEqual(self.currency_list.get_currency_list(), ["USD", "EUR", "ABC"])
 
     def test_list_currency_items(self):
         """
         Test list_currency_items method
         """
-        currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="real")
-        currency_item_2 = CurrencyItem(code="EUR", rate_usd=0.9, currency_type="custom")
-        currency_list = CurrencyList(
-            list_of_currencies=[currency_item_1, currency_item_2]
-        )
-        self.assertEqual(len(currency_list.list_currency_items()), 2)
+        self.assertEqual(len(self.currency_list.list_currency_items()), 3)
 
     def test_get_real_currencies(self):
         """
         Test get_real_currencies method
         """
-        currency_list = CurrencyList(
-            [
-                CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing"),
-                CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real"),
-                CurrencyItem(code="ABC", rate_usd=2, currency_type="custom"),
-            ]
-        )
         self.assertEqual(
-            currency_list.get_real_currencies(),
+            self.currency_list.get_real_currencies(),
             CurrencyList(
                 [CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real")]
             ),
         )
 
     def test_get_currency_rate(self):
-        currency_list = CurrencyList(
-            [
-                CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing"),
-                CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real"),
-                CurrencyItem(code="ABC", rate_usd=2, currency_type="custom"),
-            ]
-        )
         self.assertEqual(
-            currency_list.get_currency_rate(), {"USD": 1.0, "EUR": 1.55, "ABC": 2}
+            self.currency_list.get_currency_rate(), {"USD": 1.0, "EUR": 1.55, "ABC": 2}
         )
 
 
 class TestDatabaseCurrencyList(unittest.TestCase):
     """Tests for DatabaseCurrencyList"""
+    @classmethod
+    def setUpClass(cls):
+        currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing")
+        currency_item_2 = CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real")
+        currency_item_3 = CurrencyItem(code="ABC", rate_usd=2, currency_type="custom")
+        currency_list = CurrencyList(
+            list_of_currencies=[currency_item_1, currency_item_2, currency_item_3]
+        )
+        cls.db_currency_list = DatabaseCurrencyList(currencies=currency_list)
 
     def test_database_currency_list(self):
         """
         Test if DatabaseCurrencyList instance is created properly
         """
-        currency_list = CurrencyList(
-            [
-                CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing"),
-                CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real"),
-                CurrencyItem(code="ABC", rate_usd=2, currency_type="custom"),
-            ]
-        )
-        db_currency_list = DatabaseCurrencyList(currencies=currency_list)
-        self.assertTrue(hasattr(db_currency_list, "currencies"))
-        self.assertTrue(hasattr(db_currency_list, "update_time"))
+        self.assertTrue(hasattr(self.db_currency_list, "currencies"))
+        self.assertTrue(hasattr(self.db_currency_list, "update_time"))
 
     def test_update_timestamp(self):
         """
         Test update_timestamp method
         """
-        currency_list = CurrencyList(
-            [
-                CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing"),
-                CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real"),
-                CurrencyItem(code="ABC", rate_usd=2, currency_type="custom"),
-            ]
-        )
-        db_currency_list = DatabaseCurrencyList(currencies=currency_list)
-        db_currency_list.update_timestamp()
-        diff = datetime.now().astimezone(pytz.utc) - db_currency_list.update_time
+        self.db_currency_list.update_timestamp()
+        diff = datetime.now().astimezone(pytz.utc) - self.db_currency_list.update_time
         self.assertTrue(diff < timedelta(milliseconds=0.1))
 
     def test_return_currency_list_obj(self):
-        currency_list = CurrencyList(
-            [
-                CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing"),
-                CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real"),
-                CurrencyItem(code="ABC", rate_usd=2, currency_type="custom"),
-            ]
-        )
-        db_currency_list = DatabaseCurrencyList(currencies=currency_list)
-        currency_list_obj = db_currency_list.currencies.model_dump().get(
+        currency_list_obj = self.db_currency_list.currencies.model_dump().get(
             "list_of_currencies"
         )
         self.assertEqual(
@@ -164,16 +128,8 @@ class TestDatabaseCurrencyList(unittest.TestCase):
         )
 
     def test_get_currencies_list(self):
-        currency_list = CurrencyList(
-            [
-                CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing"),
-                CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real"),
-                CurrencyItem(code="ABC", rate_usd=2, currency_type="custom"),
-            ]
-        )
-        db_currency_list = DatabaseCurrencyList(currencies=currency_list)
         self.assertEqual(
-            db_currency_list.currencies.model_dump().get("list_of_currencies"),
+            self.db_currency_list.currencies.model_dump().get("list_of_currencies"),
             [
                 {"code": "USD", "currency_type": "backing", "rate_usd": 1.0},
                 {"code": "EUR", "currency_type": "real", "rate_usd": 1.55},
