@@ -18,6 +18,7 @@ def root():
 
 @router.get("/available-currencies")
 def get_available_currencies():
+    """ Lists tracked currencies """
     return get_available_currencies_service()
 
 
@@ -29,18 +30,21 @@ def update_rates():
 
 @router.get("/conversion")
 def get_conversion(source_currency: str, target_currency: str, amount: float):
+    """ Performs currency conversion"""
     conversion = get_conversion_service(source_currency, target_currency)
     return conversion * amount
 
 
 @router.post("/track-real-currency")
 def track_real_currency(code: str):
+    """Adds real currencies to tracked list"""
     track_real_currency_service(code)
     return {"details": f"Currency wih {code=} is now being tracked"}
 
 
 @router.post("/add-custom-currency")
 def add_custom_currency(code: str, rate_usd: float):
+    """Adds custom currency to tracked list with rate provided by the user"""
     add_custom_currency_service(code, rate_usd)
     fetch_external_api()
     return {"details": f"Custom currency wih {code=} created successfully"}
