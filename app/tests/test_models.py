@@ -4,9 +4,10 @@ from datetime import datetime, timedelta
 from enum import Enum
 from unittest.mock import MagicMock, patch
 
+
 import pytz
 
-from v1.models import (
+from app.api.v1.models import (
     CurrencyItem,
     CurrencyList,
     CurrencyApiInterface,

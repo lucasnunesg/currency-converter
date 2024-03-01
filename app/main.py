@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 import uvicorn
-from api.v1 import routes
-from database import init_databases, update_conversion_collection
+from app.api.v1 import routes
+from app.database import init_databases, update_conversion_collection
 
 app = FastAPI(title="Currency Conversion")
 

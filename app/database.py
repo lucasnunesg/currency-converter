@@ -1,8 +1,9 @@
+from fastapi import Depends
 from pymongo import MongoClient
 from pymongo.collection import Collection
 from pprint import pprint
 
-from api.v1.models import (
+from app.api.v1.models import (
     CurrencyApiInterface,
     EconomiaAwesomeAPI,
     CurrencyItem,
@@ -14,7 +15,7 @@ from typing import Type, List
 
 
 def mongodb_connect(
-    database: str = "database",
+    database: str = Depends("database"),
     collection: str = "collection",
     host: str = "database",  # database for docker, localhost for local
     port: int = 27017,

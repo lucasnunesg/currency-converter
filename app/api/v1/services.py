@@ -1,9 +1,11 @@
 from datetime import datetime, timedelta
 
+import httpx
 import pytz
+from fastapi import HTTPException, requests
 
-from api.v1.models import CurrencyType, DatabaseCurrencyList
-from database import (
+from app.api.v1.models import CurrencyType, DatabaseCurrencyList
+from app.database import (
     tracked_currencies_collection,
     currency_rate_collection,
     get_last_updated_document,
@@ -35,7 +37,7 @@ def fetch_external_api() -> None:
     return None
 
 
-def fetch_conversion(source_currency: str, target_currency: str) -> float:
+def get_conversion_service(source_currency: str, target_currency: str) -> float:
     if source_currency.upper() == target_currency.upper():
         return 1
     last_doc = get_last_updated_document(currency_rate_collection)
@@ -58,17 +60,47 @@ def fetch_conversion(source_currency: str, target_currency: str) -> float:
         return find_usd_rate(source_currency) / find_usd_rate(target_currency)
 
 
-def add_tracked_currency(code: str, rate_usd: float) -> None:
+def add_custom_currency_service(code: str, rate_usd: float) -> None:
     """Adds a new currency provided by the user to the collection"""
     updated_currencies = get_last_updated_document(tracked_currencies_collection)
     del updated_currencies["_id"]
     db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
-    dic = db_currency_list_obj.model_dump()
     new_currency = {
         "code": code,
         "currency_type": CurrencyType.CUSTOM.value,
         "rate_usd": rate_usd,
     }
-    updated_currencies.get("currencies").get("list_of_currencies").append(new_currency)
+    currency_list = updated_currencies.get("currencies").get("list_of_currencies")
+    if code.upper() in db_currency_list_obj.get_currencies_list():
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} is already being tracked")
+    elif httpx.get(f"https://economia.awesomeapi.com.br/last/USD-{code}").status_code == 200:
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} already exists, please choose another "
+                                                    f"code or add the real currency to the tracking list using the "
+                                                    f"'track-real-currency' endpoint")
+    else:
+        currency_list.append(new_currency)
 
     tracked_currencies_collection.insert_one(updated_currencies)
+
+
+def track_real_currency_service(code: str) -> None:
+    request = httpx.get(f"https://economia.awesomeapi.com.br/last/USD-{code}")
+    code = code.upper()
+    updated_currencies = get_last_updated_document(tracked_currencies_collection)
+    del updated_currencies["_id"]
+    db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
+    if request.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} not found. Use 'add-custom-currency' to "
+                            f"create and track it.")
+    elif code.upper() in db_currency_list_obj.get_currencies_list():
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} is already being tracked")
+
+    new_currency = {
+        "code": code,
+        "currency_type": CurrencyType.REAL.value,
+        "rate_usd": 0,
+    }
+    currency_list = updated_currencies.get("currencies").get("list_of_currencies")
+    currency_list.append(new_currency)
+    tracked_currencies_collection.insert_one(updated_currencies)
+    fetch_external_api()

@@ -1,11 +1,13 @@
+from http.client import HTTPResponse
+
 from fastapi import APIRouter
 
-from api.v1.services import (
+from app.api.v1.services import (
     fetch_all_currencies,
     fetch_external_api,
     fetch_all_currency_rates,
-    fetch_conversion,
-    add_tracked_currency,
+    get_conversion_service,
+    add_custom_currency_service, track_real_currency_service,
 )
 
 router = APIRouter(prefix="/v1", tags=["V1"])
@@ -27,20 +29,20 @@ def get_rates():
     return fetch_all_currency_rates()
 
 
-@router.get("/update-rates")
-def update_rates():
-    fetch_external_api()
-    return "Conversion rates updated successfully"
-
-
 @router.get("/conversion")
 def get_conversion(source_currency: str, target_currency: str, amount: float):
-    conversion = fetch_conversion(source_currency, target_currency)
+    conversion = get_conversion_service(source_currency, target_currency)
     return conversion * amount
 
 
-@router.post("/add-currency")
-def add_currency(code: str, rate_usd: float):
-    add_tracked_currency(code, rate_usd)
+@router.post("/track-real-currency")
+def track_real_currency(code: str):
+    track_real_currency_service(code)
+    return f"Currency wih {code=} successfully added"
+
+
+@router.post("/add-custom-currency")
+def add_custom_currency(code: str, rate_usd: float):
+    add_custom_currency_service(code, rate_usd)
     fetch_external_api()
     return "Currency added successfully"
