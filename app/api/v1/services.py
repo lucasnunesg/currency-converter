@@ -43,6 +43,11 @@ def get_conversion_service(source_currency: str, target_currency: str) -> float:
     last_doc = get_last_updated_document(currency_rate_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
+
+    if source_currency not in obj.get_currencies_list(all_currencies=True):
+        raise HTTPException(status_code=400, detail=f"Currency with code={source_currency} is not being tracked")
+    if target_currency not in obj.get_currencies_list(all_currencies=True):
+        raise HTTPException(status_code=400, detail=f"Currency with code={target_currency} is not being tracked")
     if obj.update_time < datetime.now().astimezone(pytz.utc) - timedelta(minutes=2):
         fetch_external_api()
     cl = obj.return_currency_list_obj()
