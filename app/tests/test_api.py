@@ -59,8 +59,8 @@ def test_conversion():
     rate2 = random.uniform(1, 1000)
     amount = random.uniform(1, 1000)
 
-    r1 = requests.post(f'http://0.0.0.0:8000/v1/add-custom-currency?code={code1}&rate_usd={rate1}')
-    r2 = requests.post(f'http://0.0.0.0:8000/v1/add-custom-currency?code={code2}&rate_usd={rate2}')
+    requests.post(f'http://0.0.0.0:8000/v1/add-custom-currency?code={code1}&rate_usd={rate1}')
+    requests.post(f'http://0.0.0.0:8000/v1/add-custom-currency?code={code2}&rate_usd={rate2}')
 
     response = requests.get(f'http://0.0.0.0:8000/v1/conversion?source_currency={code1}&target_currency={code2}&amount={amount}')
 
