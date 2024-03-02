@@ -5,7 +5,7 @@ from app.api.v1.services import (
     fetch_external_api,
     update_rates_service,
     get_conversion_service,
-    add_custom_currency_service, track_real_currency_service,
+    add_custom_currency_service, track_real_currency_service, delete_currency_service,
 )
 
 router = APIRouter(prefix="/v1", tags=["V1"])
@@ -35,16 +35,22 @@ def get_conversion(source_currency: str, target_currency: str, amount: float):
     return conversion * amount
 
 
-@router.post("/track-real-currency")
+@router.post("/track-real-currency", status_code=201)
 def track_real_currency(code: str):
     """Adds real currencies to tracked list"""
-    track_real_currency_service(code)
-    return {"details": f"Currency wih {code=} is now being tracked"}
+    track_real_currency_service(code.upper())
+    return get_available_currencies_service()
 
 
-@router.post("/add-custom-currency")
+@router.post("/add-custom-currency", status_code=201)
 def add_custom_currency(code: str, rate_usd: float):
     """Adds custom currency to tracked list with rate provided by the user"""
-    add_custom_currency_service(code, rate_usd)
+    add_custom_currency_service(code.upper(), rate_usd)
     fetch_external_api()
-    return {"details": f"Custom currency wih {code=} created successfully"}
+    return get_available_currencies_service()
+
+
+@router.delete("/delete-currency", status_code=200)
+def delete_currency(code: str):
+    delete_currency_service(code.upper())
+    return {"details": "deleted"}

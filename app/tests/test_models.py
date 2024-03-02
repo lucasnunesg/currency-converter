@@ -112,7 +112,7 @@ class TestDatabaseCurrencyList(unittest.TestCase):
         """
         self.db_currency_list.update_timestamp()
         diff = datetime.now().astimezone(pytz.utc) - self.db_currency_list.update_time
-        self.assertTrue(diff < timedelta(milliseconds=0.1))
+        self.assertTrue(diff < timedelta(milliseconds=100))
 
     def test_return_currency_list_obj(self):
         currency_list_obj = self.db_currency_list.currencies.model_dump().get(

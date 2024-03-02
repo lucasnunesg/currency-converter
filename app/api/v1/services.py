@@ -13,7 +13,7 @@ from app.database import (
 )
 
 
-def get_available_currencies_service() -> dict:
+def get_available_currencies_service() -> list:
     last_doc = get_last_updated_document(tracked_currencies_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
@@ -84,7 +84,7 @@ def add_custom_currency_service(code: str, rate_usd: float) -> None:
 
 
 def track_real_currency_service(code: str) -> None:
-    request = httpx.get(f"https://economia.awesomeapi.com.br/last/USD-{code}")
+    request = httpx.get(f"https://economia.awesomeapi.com.br/last/{code}-USD")
     code = code.upper()
     updated_currencies = get_last_updated_document(tracked_currencies_collection)
     del updated_currencies["_id"]
@@ -92,7 +92,7 @@ def track_real_currency_service(code: str) -> None:
     if request.status_code != 200:
         raise HTTPException(status_code=400, detail=f"Currency with {code=} not found. Use 'add-custom-currency' to "
                             f"create and track it.")
-    elif code.upper() in db_currency_list_obj.get_currencies_list():
+    elif code.upper() in db_currency_list_obj.get_currencies_list(all_currencies=True):
         raise HTTPException(status_code=400, detail=f"Currency with {code=} is already being tracked")
 
     new_currency = {
@@ -104,3 +104,21 @@ def track_real_currency_service(code: str) -> None:
     currency_list.append(new_currency)
     tracked_currencies_collection.insert_one(updated_currencies)
     fetch_external_api()
+
+
+def delete_currency_service(code: str):
+
+    updated_currencies = get_last_updated_document(tracked_currencies_collection)
+    del updated_currencies["_id"]
+    db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
+    if code not in db_currency_list_obj.get_currencies_list(all_currencies=True):
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} is not being tracked")
+
+    currency_list = updated_currencies.get("currencies").get("list_of_currencies")
+    for i in currency_list:
+        if i.get("code") == code:
+            del currency_list[currency_list.index(i)]
+            break
+    tracked_currencies_collection.insert_one(updated_currencies)
+    fetch_external_api()
+
