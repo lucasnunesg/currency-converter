@@ -12,11 +12,6 @@ from app.api.v1.services import (
 router = APIRouter(prefix="/v1", tags=["V1"])
 
 
-@router.get("/")
-def root():
-    return "Welcome to Currency Conversion API"
-
-
 @router.get("/available-currencies")
 def get_available_currencies():
     """Lists tracked currencies."""

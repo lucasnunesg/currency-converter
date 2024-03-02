@@ -8,7 +8,7 @@ app = FastAPI(title="Currency Conversion")
 app.include_router(routes.router)
 
 
-@app.get("/")
+@app.get("/", tags=["V1"], name="Home")
 def index():
     return "Server is running!"
 

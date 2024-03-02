@@ -9,7 +9,7 @@ def test_health_check():
     assert response.status_code == 200
 
 
-def test_economia_awesome_ap_health_check():
+def test_economia_awesome_api_health_check():
     response = requests.get("http://economia.awesomeapi.com.br/json/last/USD-BRL")
     assert response.status_code == 200
 
