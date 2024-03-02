@@ -146,3 +146,9 @@ def delete_currency_service(code: str):
             break
     tracked_currencies_collection.insert_one(updated_currencies)
     fetch_external_api()
+
+
+def update_custom_currency_rate_service(code: str, usd_rate: float):
+    """Updates custom currency usd_rate."""
+    delete_currency_service(code)
+    add_custom_currency_service(code, usd_rate)

@@ -6,6 +6,7 @@ from app.api.v1.services import (
     update_rates_service,
     get_conversion_service,
     add_custom_currency_service, track_real_currency_service, delete_currency_service,
+    update_custom_currency_rate_service,
 )
 
 router = APIRouter(prefix="/v1", tags=["V1"])
@@ -67,6 +68,13 @@ def add_custom_currency(code: str, rate_usd: float):
 
 @router.delete("/delete-currency", status_code=200)
 def delete_currency(code: str):
-    """Deletes currency based on its code"""
+    """Deletes currency based on its code."""
     delete_currency_service(code.upper())
     return {"details": "deleted"}
+
+
+@router.put("/update-custom-currency", status_code=200)
+def update_custom_currency_rate(code: str, usd_rate: float):
+    """Updates custom currency usd_rate."""
+    update_custom_currency_rate_service(code, usd_rate)
+    return {code: usd_rate}
