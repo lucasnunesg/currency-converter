@@ -1,19 +1,23 @@
-import httpx
 import random
 import time
+
+import httpx
 
 list_of_currencies = ["EUR", "BTC", "USD", "BRL", "ETH"]
 
 
 def get_random_currency():
+    """Returns a random currency from base list (list_of_currencies)."""
     return random.choice(list_of_currencies)
 
 
 def url_constructor(c1: str, c2: str, amount: float):
+    """Returns the built URL based on two currencies and an amount."""
     return f"http://0.0.0.0:8000/v1/conversion?source_currency={c1}&target_currency={c2}&amount={amount}"
 
 
 def requests_test(request_number: int):
+    """Simulates multiple requests using httpx client."""
     with httpx.Client() as client:
         n = 0
         start_time = time.time()

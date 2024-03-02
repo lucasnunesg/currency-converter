@@ -17,21 +17,26 @@ from app.api.v1.models import (
 
 
 class TestCurrencyType(unittest.TestCase):
+
+    """Tests currency type class"""
     def test_is_enum(self):
+        """Tests if class inherits from Enum."""
+
         self.assertTrue(issubclass(CurrencyType, Enum))
 
     def default_values(self):
+        """Tests if default values include 'real' and 'backing'."""
+
         self.assertTrue(CurrencyType.REAL.value in CurrencyType.__members__.values())
         self.assertTrue(CurrencyType.BACKING.value in CurrencyType.__members__.values())
 
 
 class TestCurrencyItem(unittest.TestCase):
-    """Test CurrencyItem class"""
 
+    """Test CurrencyItem class."""
     def test_currency_item(self):
-        """
-        Test if CurrencyItem instance is created properly
-        """
+        """Test if CurrencyItem instance is created properly."""
+
         currency_item = CurrencyItem(code="USD", rate_usd=1.0, currency_type="real")
         self.assertEqual(currency_item.code, "USD")
         self.assertEqual(currency_item.rate_usd, 1.0)
@@ -39,12 +44,12 @@ class TestCurrencyItem(unittest.TestCase):
 
 
 class TestCurrencyList(unittest.TestCase):
-    """
-    Test CurrencyList class
-    """
 
+    """Test CurrencyList class."""
     @classmethod
     def setUpClass(cls):
+        """Fixture setup to be used by all other tests for this class."""
+
         currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing")
         currency_item_2 = CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real")
         currency_item_3 = CurrencyItem(code="ABC", rate_usd=2, currency_type="custom")
@@ -53,27 +58,23 @@ class TestCurrencyList(unittest.TestCase):
         )
 
     def test_currency_list(self):
-        """
-        Test if CurrencyList instance is created properly
-        """
+        """Tests if CurrencyList instance is created properly."""
+
         self.assertEqual(len(self.currency_list.list_of_currencies), 3)
 
     def test_get_currency_list(self):
-        """
-        Test get_currency_list method
-        """
+        """Tests get_currency_list method."""
+
         self.assertEqual(self.currency_list.get_currency_list(), ["USD", "EUR", "ABC"])
 
     def test_list_currency_items(self):
-        """
-        Test list_currency_items method
-        """
+        """Tests list_currency_items method."""
+
         self.assertEqual(len(self.currency_list.list_currency_items()), 3)
 
     def test_get_real_currencies(self):
-        """
-        Test get_real_currencies method
-        """
+        """Tests get_real_currencies method."""
+
         self.assertEqual(
             self.currency_list.get_real_currencies(),
             CurrencyList(
@@ -82,15 +83,20 @@ class TestCurrencyList(unittest.TestCase):
         )
 
     def test_get_currency_rate(self):
+        """Tests get_currency_rate method."""
+
         self.assertEqual(
             self.currency_list.get_currency_rate(), {"USD": 1.0, "EUR": 1.55, "ABC": 2}
         )
 
 
 class TestDatabaseCurrencyList(unittest.TestCase):
-    """Tests for DatabaseCurrencyList"""
+
+    """Tests for DatabaseCurrencyList class."""
     @classmethod
     def setUpClass(cls):
+        """Fixture setup to be used by all other tests for this class."""
+
         currency_item_1 = CurrencyItem(code="USD", rate_usd=1.0, currency_type="backing")
         currency_item_2 = CurrencyItem(code="EUR", rate_usd=1.55, currency_type="real")
         currency_item_3 = CurrencyItem(code="ABC", rate_usd=2, currency_type="custom")
@@ -100,21 +106,21 @@ class TestDatabaseCurrencyList(unittest.TestCase):
         cls.db_currency_list = DatabaseCurrencyList(currencies=currency_list)
 
     def test_database_currency_list(self):
-        """
-        Test if DatabaseCurrencyList instance is created properly
-        """
+        """Tests if DatabaseCurrencyList instance is created properly."""
+
         self.assertTrue(hasattr(self.db_currency_list, "currencies"))
         self.assertTrue(hasattr(self.db_currency_list, "update_time"))
 
     def test_update_timestamp(self):
-        """
-        Test update_timestamp method
-        """
+        """Tests update_timestamp method."""
+
         self.db_currency_list.update_timestamp()
         diff = datetime.now().astimezone(pytz.utc) - self.db_currency_list.update_time
         self.assertTrue(diff < timedelta(milliseconds=100))
 
     def test_return_currency_list_obj(self):
+        """Tests return_currency_list_obj method."""
+
         currency_list_obj = self.db_currency_list.currencies.model_dump().get(
             "list_of_currencies"
         )
@@ -128,6 +134,8 @@ class TestDatabaseCurrencyList(unittest.TestCase):
         )
 
     def test_get_currencies_list(self):
+        """Tests get_currencies_list method."""
+
         self.assertEqual(
             self.db_currency_list.currencies.model_dump().get("list_of_currencies"),
             [
@@ -139,14 +147,12 @@ class TestDatabaseCurrencyList(unittest.TestCase):
 
 
 class TestCurrencyApiInterface(unittest.TestCase):
-    """Test CurrencyApiInterface class"""
 
+    """Test CurrencyApiInterface class."""
     def test_abstract_methods(self):
-        """Test if abstract methods are implemented properly"""
-        # Checks if the class is abstract
-        self.assertTrue(issubclass(CurrencyApiInterface, ABC))
+        """Test if abstract methods are implemented properly."""
 
-        # Checks if the abstract methods are implemented
+        self.assertTrue(issubclass(CurrencyApiInterface, ABC))
         self.assertTrue(
             hasattr(EconomiaAwesomeAPI, "url_builder")
             and callable(EconomiaAwesomeAPI.url_builder)
@@ -158,11 +164,11 @@ class TestCurrencyApiInterface(unittest.TestCase):
 
 
 class TestEconomiaAwesomeAPI(unittest.TestCase):
-    """Test EconomiaAwesomeAPI class"""
 
+    """Test EconomiaAwesomeAPI class."""
     @patch("requests.get")
     def test_get_conversion(self, mock_get):
-        """Test get_conversion method"""
+        """Test get_conversion method."""
         mock_response = MagicMock()
         mock_response.json.return_value = {
             "USD": {"code": "USD", "bid": 5.0},

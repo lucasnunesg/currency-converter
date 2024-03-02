@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 import httpx
 import pytz
-from fastapi import HTTPException, requests
+from fastapi import HTTPException
 
 from app.api.v1.models import CurrencyType, DatabaseCurrencyList
 from app.database import (
@@ -14,6 +14,7 @@ from app.database import (
 
 
 def get_available_currencies_service() -> list:
+    """Lists tracked currencies."""
     last_doc = get_last_updated_document(tracked_currencies_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
@@ -21,6 +22,7 @@ def get_available_currencies_service() -> list:
 
 
 def update_rates_service() -> list:
+    """Gets conversion rates from all currencies in relation to USD."""
     last_doc = get_last_updated_document(currency_rate_collection)
     del last_doc["_id"]
     only_currencies = last_doc.get("currencies")
@@ -31,6 +33,7 @@ def update_rates_service() -> list:
 
 
 def fetch_external_api() -> None:
+    """Updates conversion rates."""
     update_conversion_collection(
         currency_rate_collection, tracked_currencies_collection
     )
@@ -38,6 +41,12 @@ def fetch_external_api() -> None:
 
 
 def get_conversion_service(source_currency: str, target_currency: str) -> float:
+    """Performs currency conversion.
+
+    Attributes:
+    source_currency (str): source currency code.
+    target_currency (str): target currency code.
+    """
     if source_currency.upper() == target_currency.upper():
         return 1
     last_doc = get_last_updated_document(currency_rate_collection)
@@ -54,6 +63,7 @@ def get_conversion_service(source_currency: str, target_currency: str) -> float:
     dic = cl.get_currency_rate()
 
     def find_usd_rate(currency: str):
+        """Returns single conversion rate based on USD value."""
         if currency == "USD":
             return 1
         else:
@@ -66,7 +76,12 @@ def get_conversion_service(source_currency: str, target_currency: str) -> float:
 
 
 def add_custom_currency_service(code: str, rate_usd: float) -> None:
-    """Adds a new currency provided by the user to the collection"""
+    """Adds custom currency to tracked list with rate provided by the user.
+
+    Attributes:
+        code (str): code of the currency to be added.
+        rate_usd (float): conversion rate related to USD value.
+    """
     updated_currencies = get_last_updated_document(tracked_currencies_collection)
     del updated_currencies["_id"]
     db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
@@ -89,6 +104,11 @@ def add_custom_currency_service(code: str, rate_usd: float) -> None:
 
 
 def track_real_currency_service(code: str) -> None:
+    """Adds real currencies to tracked list.
+
+    Attributes:
+          code (str): code of the real currency to be tracked.
+    """
     request = httpx.get(f"https://economia.awesomeapi.com.br/last/{code}-USD")
     code = code.upper()
     updated_currencies = get_last_updated_document(tracked_currencies_collection)
@@ -112,7 +132,7 @@ def track_real_currency_service(code: str) -> None:
 
 
 def delete_currency_service(code: str):
-
+    """Deletes currency based on its code."""
     updated_currencies = get_last_updated_document(tracked_currencies_collection)
     del updated_currencies["_id"]
     db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
@@ -126,4 +146,3 @@ def delete_currency_service(code: str):
             break
     tracked_currencies_collection.insert_one(updated_currencies)
     fetch_external_api()
-

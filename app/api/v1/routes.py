@@ -18,33 +18,48 @@ def root():
 
 @router.get("/available-currencies")
 def get_available_currencies():
-    """ Lists tracked currencies """
+    """Lists tracked currencies."""
     return get_available_currencies_service()
 
 
 @router.get("/rates-usd")
 def update_rates():
-    """Gets conversion rates from all currencies in relation to USD"""
+    """Gets conversion rates from all currencies in relation to USD."""
     return update_rates_service()
 
 
 @router.get("/conversion")
 def get_conversion(source_currency: str, target_currency: str, amount: float):
-    """ Performs currency conversion"""
+    """Performs currency conversion.
+    
+    Attributes:
+        source_currency (str): source currency code.
+        target_currency (str): target currency code.
+        amount (float): amount to convert.
+    """
     conversion = get_conversion_service(source_currency, target_currency)
     return conversion * amount
 
 
 @router.post("/track-real-currency", status_code=201)
 def track_real_currency(code: str):
-    """Adds real currencies to tracked list"""
+    """Adds real currencies to tracked list.
+    
+    Attributes:
+          code (str): code of the real currency to be tracked.  
+    """
     track_real_currency_service(code.upper())
     return get_available_currencies_service()
 
 
 @router.post("/add-custom-currency", status_code=201)
 def add_custom_currency(code: str, rate_usd: float):
-    """Adds custom currency to tracked list with rate provided by the user"""
+    """Adds custom currency to tracked list with rate provided by the user.
+    
+    Attributes:
+        code (str): code of the currency to be added.
+        rate_usd (float): conversion rate related to USD value.
+    """
     add_custom_currency_service(code.upper(), rate_usd)
     fetch_external_api()
     return get_available_currencies_service()
@@ -52,5 +67,6 @@ def add_custom_currency(code: str, rate_usd: float):
 
 @router.delete("/delete-currency", status_code=200)
 def delete_currency(code: str):
+    """Deletes currency based on its code"""
     delete_currency_service(code.upper())
     return {"details": "deleted"}
