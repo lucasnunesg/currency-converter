@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
 from app.api.v1.services import (
     get_available_currencies_service,
@@ -59,6 +59,8 @@ def add_custom_currency(code: str, rate_usd: float):
 @router.delete("/delete-currency", status_code=200, response_model=DatabaseCurrencyList)
 def delete_currency(code: str):
     """Deletes currency based on its code."""
+    if code.upper() == "USD":
+        raise HTTPException(status_code=404, detail="Can't delete backing currency.")
 
     return delete_currency_service(code.upper())
 

@@ -6,13 +6,33 @@ services:
     ports:
       - "27017:27017"
 
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+      - type: bind
+        source: ./populate1.sql
+        target: /docker-entrypoint-initdb.d/populate1.sql
+        read_only: true
+      - ./populate1.sql:/docker-entrypoint-initdb.d/populate1.sql
+
   web:
     build:
       context: infra/  # Caminho para o diretório onde está o Dockerfile
-    command: sh -c "uvicorn app.main:app --reload --host=0.0.0.0 --port=8000"
+      dockerfile: Dockerfile
     ports:
       - "8000:8000"
     depends_on:
       - database
+      - postgres
+    command: sh -c "uvicorn app.main:app --reload --host=0.0.0.0 --port=8000 && alembic upgrade head"
     volumes:
       - ".:/app"
+    env_file:
+      .env.dev
+volumes:
+  pgdata:
