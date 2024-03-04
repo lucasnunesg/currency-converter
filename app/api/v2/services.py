@@ -1,8 +1,9 @@
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Type
 
+import pytz
 from fastapi import Depends
-from sqlalchemy import select, create_engine
+from sqlalchemy import select, create_engine, desc
 from sqlalchemy.orm import Session
 
 from app.api.v2.external_api import CurrencyApiInterface, EconomiaAwesomeAPI
@@ -27,8 +28,20 @@ def update_conversion(session: Session, api: CurrencyApiInterface = EconomiaAwes
         code = row.code
         if code in updated_usd_rate_dict:
             row.rate_usd = updated_usd_rate_dict[code]
+            row.update_time = datetime.now().astimezone(pytz.utc)
             session.commit()
             session.refresh(row)
 
 
+def check_if_update(session: Session):
+    """Checks if the current data is updated."""
+    rows = session.query(Currency).filter(Currency.type == CurrencyType.REAL).order_by(desc(Currency.update_time))
+    oldest_update = rows.first().update_time
+    if oldest_update.replace(tzinfo=pytz.utc) < datetime.now().astimezone(pytz.utc) - timedelta(seconds=30):
+        return True
+    return False
 
+
+def get_usd_rate(session: Session, code: str) -> float:
+    """Returns usd rate of given currency."""
+    return session.query(Currency).filter(Currency.code == code).first().rate_usd

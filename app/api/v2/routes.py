@@ -8,7 +8,7 @@ from app.api.v2.models import Currency, CurrencyType
 from app.api.v2.schemas import CurrencyList, CurrencySchema
 from app.pg_database import get_session
 from app.api.v2.external_api import EconomiaAwesomeAPI, CurrencyApiInterface
-from app.api.v2.services import update_conversion
+from app.api.v2.services import update_conversion, check_if_update, get_usd_rate
 
 router = APIRouter(prefix="/v2", tags=["V2 - Postgres"])
 
@@ -67,7 +67,20 @@ def get_conversion(source_currency: str, target_currency: str, amount: float, se
         amount (float): amount to convert.
     """
     # session: Session = Depends(get_session)
-    ...
+    if source_currency == target_currency:
+        return {"result": "%.2f" % amount}
+
+    if check_if_update(session=session):
+        update_conversion(session=session)
+
+    if target_currency == "USD":
+        result = get_usd_rate(session=session, code=source_currency) * amount
+        return {"result": "%.2f" % result}
+
+    result = get_usd_rate(session, source_currency) / get_usd_rate(session, target_currency) * amount
+    return {"result": "%.2f" % result}
+
+
 
 
 @router.post("/track-real-currency", status_code=201)
