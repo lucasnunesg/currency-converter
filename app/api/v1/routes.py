@@ -9,7 +9,7 @@ from app.api.v1.services import (
 )
 from app.api.v1.models import DatabaseCurrencyList, CurrencyItem, CurrencyList, ConversionResponse
 
-router = APIRouter(prefix="/v1", tags=["V1"])
+router = APIRouter(prefix="/v1", tags=["V1 - MongoDB"])
 
 
 @router.get("/available-currencies", response_model=DatabaseCurrencyList)
