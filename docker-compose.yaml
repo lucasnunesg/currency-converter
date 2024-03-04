@@ -6,6 +6,15 @@ services:
     ports:
       - "27017:27017"
 
+  postgres:
+    image: postgres:latest
+    ports:
+      - "5432:5432"
+    env_file:
+      - .env
+    volumes:
+      - pgdata:/var/lib/postgresql/data/
+
   web:
     build:
       context: infra/  # Caminho para o diretório onde está o Dockerfile
@@ -14,5 +23,8 @@ services:
       - "8000:8000"
     depends_on:
       - database
+      - postgres
     volumes:
       - ".:/app"
+volumes:
+  pgdata:
