@@ -5,17 +5,35 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
 
 from app.pg_database import get_session
-from app.api.v2.models import Currency
+from app.api.v2.models import Currency, CurrencyType
 from app.api.v2.schemas import CurrencyList, CurrencySchema
 
-router = APIRouter(prefix="/v2", tags=["V2 - PostgreSQL"])
+
+router = APIRouter(prefix="/v2", tags=["V2 - Postgres"])
 
 local_database = []
+currency_list = [
+    CurrencySchema(code="BRL", rate_usd=0, type=CurrencyType.REAL),
+    CurrencySchema(code="EUR", rate_usd=0, type=CurrencyType.REAL),
+    CurrencySchema(code="BTC", rate_usd=0, type=CurrencyType.REAL),
+    CurrencySchema(code="ETH", rate_usd=0, type=CurrencyType.REAL),
+    CurrencySchema(code="USD", rate_usd=1, type=CurrencyType.REAL),
+]
 
 
 @router.get("/")
-def root():
-    return {"Hello": "World"}
+def populate_database(currencies: list[CurrencySchema] = currency_list, session: Session = Depends(get_session)):
+    for currency in currencies:
+        db_currency = session.scalar(select(Currency).where(Currency.code == currency.code))
+        if not db_currency:
+            db_currency = Currency(code=currency.code, rate_usd=currency.rate_usd, type=currency.type,
+                                   update_time=datetime.now())
+            session.add(db_currency)
+            session.commit()
+            session.refresh(db_currency)
+
+
+
 
 
 @router.post("/currencies/", response_model=CurrencySchema, status_code=201)

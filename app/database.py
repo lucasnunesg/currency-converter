@@ -104,7 +104,7 @@ def populate_tracked_currencies(tracked_collection: Collection) -> None:
 
 
 def init_databases() -> List[Collection]:
-    """Initialize Rate and Tracked Currencies databases with default currencies."""
+    """Initialize Rate and Tracked Currency databases with default currencies."""
     rate_collection = mongodb_connect(database="database", collection="currency_rate")
     tracked_collection = mongodb_connect(
         database="database", collection="tracked_currencies"

@@ -5,12 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4cfb4580-ea9d-4d4d-9a55-9f268f945d4f" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/app/api/v2/routes.py" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/app/api/v2/services.py" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/.idea/dataSources.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/docker-entrypoint-initdb.d/populate.sql" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v2/external_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/external_api.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/infra/requirements.txt" beforeDir="false" afterPath="$PROJECT_DIR$/infra/requirements.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v2/models.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/models.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v2/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/routes.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v2/schemas.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/schemas.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/api/v2/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/services.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app/database.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/database.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yaml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/docker-entrypoint-initdb.d/init.sql" beforeDir="false" afterPath="$PROJECT_DIR$/populate1.sql" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -52,7 +56,9 @@
     "Python.main.executor": "Run",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "git-widget-placeholder": "postgresql",
+    "last_opened_file_path": "/Users/lucasgomes/PycharmProjects/currency-converter",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -60,6 +66,11 @@
     "nodejs_package_manager_path": "npm",
     "settings.editor.selected.configurable": "preferences.fileTypes",
     "vue.rearranger.settings.migration": "true"
+  },
+  "keyToStringList": {
+    "DatabaseDriversLRU": [
+      "postgresql"
+    ]
   }
 }]]></component>
   <component name="PyConsoleOptionsProvider">
@@ -71,8 +82,15 @@
     </option>
   </component>
   <component name="RecentsManager">
-    <key name="MoveFile.RECENT_KEYS">
+    <key name="CopyFile.RECENT_KEYS">
       <recent name="$PROJECT_DIR$" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/docker-entrypoint-initdb.d" />
+      <recent name="$PROJECT_DIR$/app" />
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/migrations" />
+      <recent name="$PROJECT_DIR$/zzzz" />
     </key>
   </component>
   <component name="RunManager" selected="Python.load_test">

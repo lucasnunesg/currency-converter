@@ -20,10 +20,11 @@ class Base(DeclarativeBase):
 class Currency(Base):
 
     """Currency model"""
-    __tablename__ = "currency"
+    __tablename__ = "currencies"
 
     id: Mapped[Optional[int]] = mapped_column(primary_key=True)
     code: Mapped[str]
     rate_usd: Mapped[float]
     type: Mapped[CurrencyType]
     update_time: Mapped[datetime]
+

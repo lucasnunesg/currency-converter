@@ -21,3 +21,5 @@ class CurrencyDB(CurrencySchema):
 
 class CurrencyList(BaseModel):
     currencies: list[CurrencySchema]
+
+
