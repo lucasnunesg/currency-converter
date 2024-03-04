@@ -129,4 +129,3 @@ def update_custom_currency_rate(code: str, rate_usd: float, session: Session = D
         raise HTTPException(status_code=400, detail=f"Currency with {code=} not found.")
     delete_currency(code=code, session=session)
     return add_custom_currency(code=code, rate_usd=rate_usd, session=session)
-

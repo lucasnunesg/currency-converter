@@ -74,4 +74,3 @@ docker-compose exec web pytest -v
 
 ## Melhorias futuras
 1) Implementação de uma ODM (como por exemplo [ODMantic](https://art049.github.io/odmantic/) ou [MongoEngine](http://mongoengine.org/)) e bibliotecas auxiliares (como por exemplo [marshmallow](https://marshmallow.readthedocs.io/en/stable/)) para otimizar processos de serialização e comunicação direta com a API sem necessidade de manipular detalhes dos documentos.
-2) Testes de integração para `v2`.
