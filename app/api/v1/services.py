@@ -13,23 +13,13 @@ from app.database import (
 )
 
 
-def get_available_currencies_service() -> list:
+def get_available_currencies_service() -> DatabaseCurrencyList:
     """Lists tracked currencies."""
-    last_doc = get_last_updated_document(tracked_currencies_collection)
-    del last_doc["_id"]
-    obj = DatabaseCurrencyList(**last_doc)
-    return obj.get_currencies_list(all_currencies=True)
-
-
-def update_rates_service() -> list:
-    """Gets conversion rates from all currencies in relation to USD."""
+    fetch_external_api()
     last_doc = get_last_updated_document(currency_rate_collection)
     del last_doc["_id"]
-    only_currencies = last_doc.get("currencies")
-    no_id_list = [i for i in only_currencies if i != "_id"]
-    for i in no_id_list:
-        i.pop("_id")
-    return no_id_list
+    obj = DatabaseCurrencyList(**last_doc)
+    return obj
 
 
 def fetch_external_api() -> None:
@@ -133,7 +123,7 @@ def track_real_currency_service(code: str) -> None:
 
 def delete_currency_service(code: str):
     """Deletes currency based on its code."""
-    updated_currencies = get_last_updated_document(tracked_currencies_collection)
+    updated_currencies = get_last_updated_document(currency_rate_collection)
     del updated_currencies["_id"]
     db_currency_list_obj = DatabaseCurrencyList(**updated_currencies)
     if code not in db_currency_list_obj.get_currencies_list(all_currencies=True):
@@ -146,9 +136,14 @@ def delete_currency_service(code: str):
             break
     tracked_currencies_collection.insert_one(updated_currencies)
     fetch_external_api()
+    updated_currencies_obj = get_available_currencies_service()
+    return updated_currencies_obj
 
 
 def update_custom_currency_rate_service(code: str, usd_rate: float):
     """Updates custom currency usd_rate."""
     delete_currency_service(code)
     add_custom_currency_service(code, usd_rate)
+    fetch_external_api()
+    updated_currencies_obj = get_available_currencies_service()
+    return updated_currencies_obj

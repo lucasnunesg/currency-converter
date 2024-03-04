@@ -3,28 +3,22 @@ from fastapi import APIRouter
 from app.api.v1.services import (
     get_available_currencies_service,
     fetch_external_api,
-    update_rates_service,
     get_conversion_service,
     add_custom_currency_service, track_real_currency_service, delete_currency_service,
     update_custom_currency_rate_service,
 )
+from app.api.v1.models import DatabaseCurrencyList, CurrencyItem, CurrencyList, ConversionResponse
 
 router = APIRouter(prefix="/v1", tags=["V1"])
 
 
-@router.get("/available-currencies")
+@router.get("/available-currencies", response_model=DatabaseCurrencyList)
 def get_available_currencies():
     """Lists tracked currencies."""
     return get_available_currencies_service()
 
 
-@router.get("/rates-usd")
-def update_rates():
-    """Gets conversion rates from all currencies in relation to USD."""
-    return update_rates_service()
-
-
-@router.get("/conversion")
+@router.get("/conversion", response_model=ConversionResponse)
 def get_conversion(source_currency: str, target_currency: str, amount: float):
     """Performs currency conversion.
     
@@ -34,10 +28,10 @@ def get_conversion(source_currency: str, target_currency: str, amount: float):
         amount (float): amount to convert.
     """
     conversion = get_conversion_service(source_currency, target_currency)
-    return conversion * amount
+    return {"result": conversion * amount}
 
 
-@router.post("/track-real-currency", status_code=201)
+@router.post("/track-real-currency", status_code=201, response_model=DatabaseCurrencyList)
 def track_real_currency(code: str):
     """Adds real currencies to tracked list.
     
@@ -48,7 +42,7 @@ def track_real_currency(code: str):
     return get_available_currencies_service()
 
 
-@router.post("/add-custom-currency", status_code=201)
+@router.post("/add-custom-currency", status_code=201, response_model=DatabaseCurrencyList)
 def add_custom_currency(code: str, rate_usd: float):
     """Adds custom currency to tracked list with rate provided by the user.
     
@@ -61,15 +55,14 @@ def add_custom_currency(code: str, rate_usd: float):
     return get_available_currencies_service()
 
 
-@router.delete("/delete-currency", status_code=200)
+@router.delete("/delete-currency", status_code=200, response_model=DatabaseCurrencyList)
 def delete_currency(code: str):
     """Deletes currency based on its code."""
-    delete_currency_service(code.upper())
-    return {"details": "deleted"}
+
+    return delete_currency_service(code.upper())
 
 
-@router.put("/update-custom-currency", status_code=200)
+@router.put("/update-custom-currency", status_code=200, response_model=DatabaseCurrencyList)
 def update_custom_currency_rate(code: str, usd_rate: float):
     """Updates custom currency usd_rate."""
-    update_custom_currency_rate_service(code, usd_rate)
-    return {code: usd_rate}
+    return update_custom_currency_rate_service(code, usd_rate)

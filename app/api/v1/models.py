@@ -108,6 +108,10 @@ class DatabaseCurrencyList(BaseModel):
         return self.return_currency_list_obj().get_real_currencies().get_currency_list()
 
 
+class ConversionResponse(BaseModel):
+    result: float
+
+
 class CurrencyApiInterface(ABC):
 
     """Interface to establish contract to implement external interfaces to fetch conversion rates."""

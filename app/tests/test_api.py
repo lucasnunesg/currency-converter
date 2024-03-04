@@ -3,6 +3,8 @@ import string
 
 import requests
 
+from app.api.v1.models import DatabaseCurrencyList
+
 
 def test_health_check():
     response = requests.get("http://0.0.0.0:8000/")
@@ -22,34 +24,38 @@ def test_available_currencies():
 def test_rates_usd():
     response = requests.get("http://0.0.0.0:8000/v1/available-currencies/")
     assert response.status_code == 200
-    assert type(response.json()) == list
 
 
 def test_conversion_same_currency():
     amount = random.uniform(1, 1000)
     response = requests.get(
         f"http://localhost:8000/v1/conversion?source_currency=USD&target_currency=USD&amount={amount}")
-    assert response.json() == amount
+    assert response.json() == {"result": amount}
 
 
 def test_add_custom_currency():
     code = "ABCDEFG123321HIJ"
     rate = 10
     response = requests.post(f"http://0.0.0.0:8000/v1/add-custom-currency?code={code}&rate_usd={rate}")
-    assert "ABCDEFG123321HIJ" in response.json()
+    new_currency_dict = {"code": code, "currency_type": "custom", "rate_usd": rate}
+    assert new_currency_dict in response.json()["currencies"]["list_of_currencies"]
 
 
 def test_track_real_currency():
     code = "XAGG"
     response = requests.post(f"http://0.0.0.0:8000/v1/track-real-currency?code={code}")
-    assert code in response.json()
+    codes_list = [i.get("code") for i in response.json()["currencies"]["list_of_currencies"]]
+    assert code in codes_list
 
 
 def test_delete_currency():
     response1 = requests.delete("http://0.0.0.0:8000/v1/delete-currency?code=ABCDEFG123321HIJ")
     response2 = requests.delete("http://0.0.0.0:8000/v1/delete-currency?code=XAGG")
+    obj = DatabaseCurrencyList(**response2.json())
     assert response1.status_code == 200
     assert response2.status_code == 200
+    assert "ABCDEFG123321HIJ" not in obj.get_currencies_list()
+    assert "XAGG" not in obj.get_currencies_list()
 
 
 def test_conversion():
@@ -66,4 +72,5 @@ def test_conversion():
 
     result = amount * rate1 / rate2
 
-    assert int(response.json()*1000) == int(result*1000)
+    response_result = response.json().get("result")
+    assert int(response_result*1000) == int(result*1000)
