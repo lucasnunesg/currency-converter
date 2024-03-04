@@ -16,7 +16,7 @@ class CurrencyApiInterface(ABC):
 
     @classmethod
     @abstractmethod
-    def get_conversion(cls, url: str, currency_list: list) -> dict:
+    def get_conversion(cls, url: str) -> dict:
         """Returns updated conversions dictionary related to USD."""
         pass
 
@@ -40,7 +40,7 @@ class EconomiaAwesomeAPI(CurrencyApiInterface):
         return url[:-1]
 
     @classmethod
-    def get_conversion(cls, url: str, currency_list: list) -> dict:
+    def get_conversion(cls, url: str) -> dict:
         """Returns updated conversions dictionary related to USD."""
         response = requests.get(url)
         data = response.json()
