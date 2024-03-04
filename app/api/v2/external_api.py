@@ -36,7 +36,8 @@ class EconomiaAwesomeAPI(CurrencyApiInterface):
 
         url = cls.base_url
         for currency in currency_list:
-            url += currency + "-USD,"
+            if currency != "USD":
+                url += currency + "-USD,"
         return url[:-1]
 
     @classmethod

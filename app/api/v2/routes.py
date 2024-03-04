@@ -1,13 +1,14 @@
 from datetime import datetime
-from sqlalchemy import select
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from app.pg_database import get_session
 from app.api.v2.models import Currency, CurrencyType
 from app.api.v2.schemas import CurrencyList, CurrencySchema
-
+from app.pg_database import get_session
+from app.api.v2.external_api import EconomiaAwesomeAPI, CurrencyApiInterface
+from app.api.v2.services import update_conversion
 
 router = APIRouter(prefix="/v2", tags=["V2 - Postgres"])
 
@@ -33,9 +34,6 @@ def populate_database(currencies: list[CurrencySchema] = currency_list, session:
             session.refresh(db_currency)
 
 
-
-
-
 @router.post("/currencies/", response_model=CurrencySchema, status_code=201)
 def create_currency(currency: CurrencySchema, session: Session = Depends(get_session)):
     db_currency = session.scalar(select(Currency).where(Currency.code == currency.code))
@@ -43,7 +41,7 @@ def create_currency(currency: CurrencySchema, session: Session = Depends(get_ses
     if db_currency:
         raise HTTPException(status_code=404, detail="Currency already registered")
 
-    db_currency = Currency(code=currency.code,rate_usd=currency.rate_usd, type=currency.type, update_time=datetime.now())
+    db_currency = Currency(code=currency.code, rate_usd=currency.rate_usd, type=currency.type, update_time=datetime.now())
     session.add(db_currency)
     session.commit()
     session.refresh(db_currency)
@@ -58,10 +56,23 @@ def get_available_currencies(skip: int = 0, limit: int = 100, session: Session =
     return {"currencies": currencies}
 
 
-@router.get("/rates-usd")
-def update_rates():
+@router.get("/rates-usd", response_model=CurrencyList)
+def update_rates(session: Session = Depends(get_session)):
     """Gets conversion rates from all currencies in relation to USD."""
-    ...
+    """currencies_list = ["BRL", "ETH", "USD", "BTC", "EUR"]
+    url = api.url_builder(currencies_list)
+    print("URL: ", url)
+    updated_usd_rate_dict = api.get_conversion(url=url)
+    rows = session.query(Currency).filter(Currency.type == "REAL").all()
+    for row in rows:
+        code = row.code
+        if code in updated_usd_rate_dict:
+            row.rate_usd = updated_usd_rate_dict[code]
+            session.commit()
+            session.refresh(row)"""
+    update_conversion()
+    currencies = session.scalars(select(Currency)).all()
+    return {"currencies": currencies}
 
 
 @router.get("/conversion")
