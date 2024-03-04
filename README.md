@@ -20,8 +20,7 @@ docker-compose up --build
 
 ## Como acessar a documentação?
 
-Basta acessar o endpoint `/docs`: http://0.0.0.0:8000/docs
-A documentação informa todos os endpoints bem como seus parâmetros e tipos de retorno.
+Basta acessar o endpoint `/docs`: http://0.0.0.0:8000/docs. A documentação informa todos os endpoints bem como seus parâmetros e tipos de retorno.
 
 ## Como são feitas as conversões?
 
@@ -31,3 +30,20 @@ Existem moedas previamente adicionadas mas o usuário tem a opção de adicionar
 Todas as conversões são feitas tendo o dólar americano (USD) como moeda de lastro, e, havendo necessidade de cadastrar uma moeda fictícia, o usuário precisa informar a taxa de conversão dela para USD.
 
 
+## Como rodar os testes?
+
+OBS: necessário que o contêiner esteja em execução
+
+### Teste de de estresse
+
+Estando na pasta do projeto (``currency-converter/`), basta executar o seguinte comando:
+```shell
+python3 app/tests/load_test.py
+```
+
+### Demais testes
+
+Executar o seguinte comando:
+```shell
+docker-compose exec web pytest -v
+```
