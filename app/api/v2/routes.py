@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import pytz
 import requests
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
@@ -7,13 +8,11 @@ from sqlalchemy.orm import Session
 
 from app.api.v2.models import Currency, CurrencyType
 from app.api.v2.schemas import CurrencyList, CurrencySchema
-from app.pg_database import get_session
-from app.api.v2.external_api import EconomiaAwesomeAPI, CurrencyApiInterface
 from app.api.v2.services import update_conversion, check_if_update, get_usd_rate, check_currency_exists_db
+from app.pg_database import get_session
 
 router = APIRouter(prefix="/v2", tags=["V2 - Postgres"])
 
-local_database = []
 currency_list = [
     CurrencySchema(code="BRL", rate_usd=0, type=CurrencyType.REAL),
     CurrencySchema(code="EUR", rate_usd=0, type=CurrencyType.REAL),
@@ -33,21 +32,6 @@ def populate_database(currencies: list[CurrencySchema] = currency_list, session:
             session.add(db_currency)
             session.commit()
             session.refresh(db_currency)
-
-
-@router.post("/currencies/", response_model=CurrencySchema, status_code=201)
-def create_currency(currency: CurrencySchema, session: Session = Depends(get_session)):
-    db_currency = session.scalar(select(Currency).where(Currency.code == currency.code))
-
-    if db_currency:
-        raise HTTPException(status_code=404, detail="Currency already registered")
-
-    db_currency = Currency(code=currency.code, rate_usd=currency.rate_usd, type=currency.type, update_time=datetime.now())
-    session.add(db_currency)
-    session.commit()
-    session.refresh(db_currency)
-
-    return db_currency
 
 
 @router.get("/available-currencies", response_model=CurrencyList)
@@ -92,7 +76,7 @@ def track_real_currency(code: str, session: Session = Depends(get_session)):
     code = code.upper()
     if check_currency_exists_db(code=code, session=session):
         raise HTTPException(status_code=400, detail=f"Currency with {code=} is already being tracked")
-    response = requests.get(f"https://economia.awesomeapi.com.br/last/{code}-USD")
+    response = requests.get(f"https://economia.awesomeapi.com.br/last/USD-{code}")
     if response.status_code != 200:
         raise HTTPException(status_code=400, detail=f"Real currency with {code=} not found!")
     db_currency = Currency(code=code, rate_usd=0, type=CurrencyType.REAL,
@@ -104,24 +88,45 @@ def track_real_currency(code: str, session: Session = Depends(get_session)):
     return db_currency
 
 
-@router.post("/add-custom-currency", status_code=201)
-def add_custom_currency(code: str, rate_usd: float):
+@router.post("/add-custom-currency", status_code=201, response_model=CurrencySchema)
+def add_custom_currency(code: str, rate_usd: float, session: Session = Depends(get_session)):
     """Adds custom currency to tracked list with rate provided by the user.
 
     Attributes:
         code (str): code of the currency to be added.
         rate_usd (float): conversion rate related to USD value.
     """
-    ...
+    if check_currency_exists_db(code=code, session=session):
+        raise HTTPException(status_code=404, detail=f"Currency with {code=} is already being tracked")
+    response = requests.get(f"https://economia.awesomeapi.com.br/last/USD-{code}")
+    if response.status_code == 200:
+        raise HTTPException(status_code=400, detail=f"Real currency with {code=} already exists, please use another code")
+    db_currency = Currency(code=code, rate_usd=rate_usd, type=CurrencyType.CUSTOM,
+                           update_time=datetime.now().astimezone(pytz.utc))
+    session.add(db_currency)
+    session.commit()
+    session.refresh(db_currency)
+    return db_currency
 
 
 @router.delete("/delete-currency", status_code=200)
-def delete_currency(code: str):
+def delete_currency(code: str, session: Session = Depends(get_session)):
     """Deletes currency based on its code."""
-    ...
+    currency = session.scalar(select(Currency).where(Currency.code == code))
+
+    if not currency:
+        raise HTTPException(status_code=404, detail=f"Currency with {code=} not found.")
+    session.delete(currency)
+    session.commit()
+    return {"message": "Currency has been deleted successfully."}
 
 
-@router.put("/update-custom-currency", status_code=200)
-def update_custom_currency_rate(code: str, usd_rate: float):
+@router.patch("/update-custom-currency", status_code=200, response_model=CurrencySchema)
+def update_custom_currency_rate(code: str, rate_usd: float, session: Session = Depends(get_session)):
     """Updates custom currency usd_rate."""
-    ...
+    currency_db = session.scalar(select(Currency).where(Currency.code == code))
+    if not currency_db:
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} not found.")
+    delete_currency(code=code, session=session)
+    return add_custom_currency(code=code, rate_usd=rate_usd, session=session)
+
