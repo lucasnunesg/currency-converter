@@ -5,18 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4cfb4580-ea9d-4d4d-9a55-9f268f945d4f" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/app_db.XLfkqw/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/app_db.XLfkqw/schema/information_schema.FNRwLQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/app_db.XLfkqw/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/app_db.XLfkqw/schema/pg_catalog.0S1ZNQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/app_db.XLfkqw/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/app_db.XLfkqw/schema/public.abK9xQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/postgres.edMnLQ/schema/information_schema.FNRwLQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/postgres.edMnLQ/schema/pg_catalog.0S1ZNQ.meta" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/dataSources/a50da246-0d4e-444a-a278-885ed02adb37/storage_v2/_src_/database/postgres.edMnLQ/schema/public.abK9xQ.meta" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app/api/v2/external_api.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/external_api.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v2/routes.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/routes.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app/api/v2/services.py" beforeDir="false" afterPath="$PROJECT_DIR$/app/api/v2/services.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/docker-compose.yaml" beforeDir="false" afterPath="$PROJECT_DIR$/docker-compose.yaml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />

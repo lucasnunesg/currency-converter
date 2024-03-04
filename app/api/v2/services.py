@@ -1,4 +1,5 @@
 from datetime import datetime
+from typing import Type
 
 from fastapi import Depends
 from sqlalchemy import select, create_engine
@@ -11,22 +12,14 @@ from app.pg_database import get_session
 from app.settings import Settings
 
 
-def update_conversion(api: CurrencyApiInterface = EconomiaAwesomeAPI) -> None:
-    engine = create_engine(Settings().DATABASE_URL)
-    connection = engine.connect()
-    from sqlalchemy.orm import sessionmaker
-    Session = sessionmaker(bind=engine)
-    session = Session()
-
+def update_conversion(session: Session, api: CurrencyApiInterface = EconomiaAwesomeAPI) -> None:
+    """Updates conversion for real currencies."""
     currencies_list = []
 
     rows = session.query(Currency).filter(Currency.type == CurrencyType.REAL).all()
     for row in rows:
-        print("ROW: ", row.type)
-        print()
         if row.type == CurrencyType.REAL:
             currencies_list.append(row.code)
-    print("Curencies list: ", currencies_list)
     url = api.url_builder(currencies_list)
     updated_usd_rate_dict = api.get_conversion(url=url)
 
@@ -36,6 +29,6 @@ def update_conversion(api: CurrencyApiInterface = EconomiaAwesomeAPI) -> None:
             row.rate_usd = updated_usd_rate_dict[code]
             session.commit()
             session.refresh(row)
-    connection.close()
+
 
 
