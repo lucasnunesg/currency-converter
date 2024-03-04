@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import requests
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.orm import Session
@@ -8,7 +9,7 @@ from app.api.v2.models import Currency, CurrencyType
 from app.api.v2.schemas import CurrencyList, CurrencySchema
 from app.pg_database import get_session
 from app.api.v2.external_api import EconomiaAwesomeAPI, CurrencyApiInterface
-from app.api.v2.services import update_conversion, check_if_update, get_usd_rate
+from app.api.v2.services import update_conversion, check_if_update, get_usd_rate, check_currency_exists_db
 
 router = APIRouter(prefix="/v2", tags=["V2 - Postgres"])
 
@@ -65,8 +66,8 @@ def get_conversion(source_currency: str, target_currency: str, amount: float, se
         source_currency (str): source currency code.
         target_currency (str): target currency code.
         amount (float): amount to convert.
+        session (Session): db session (for dependency injection purposes).
     """
-    # session: Session = Depends(get_session)
     if source_currency == target_currency:
         return {"result": "%.2f" % amount}
 
@@ -81,16 +82,26 @@ def get_conversion(source_currency: str, target_currency: str, amount: float, se
     return {"result": "%.2f" % result}
 
 
-
-
-@router.post("/track-real-currency", status_code=201)
-def track_real_currency(code: str):
+@router.post("/track-real-currency", status_code=201, response_model=CurrencySchema)
+def track_real_currency(code: str, session: Session = Depends(get_session)):
     """Adds real currencies to tracked list.
 
     Attributes:
           code (str): code of the real currency to be tracked.
     """
-    ...
+    code = code.upper()
+    if check_currency_exists_db(code=code, session=session):
+        raise HTTPException(status_code=400, detail=f"Currency with {code=} is already being tracked")
+    response = requests.get(f"https://economia.awesomeapi.com.br/last/{code}-USD")
+    if response.status_code != 200:
+        raise HTTPException(status_code=400, detail=f"Real currency with {code=} not found!")
+    db_currency = Currency(code=code, rate_usd=0, type=CurrencyType.REAL,
+                           update_time=datetime.now())
+    session.add(db_currency)
+    session.commit()
+    session.refresh(db_currency)
+    update_conversion(session=session)
+    return db_currency
 
 
 @router.post("/add-custom-currency", status_code=201)

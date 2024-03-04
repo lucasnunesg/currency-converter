@@ -45,3 +45,12 @@ def check_if_update(session: Session):
 def get_usd_rate(session: Session, code: str) -> float:
     """Returns usd rate of given currency."""
     return session.query(Currency).filter(Currency.code == code).first().rate_usd
+
+
+def check_currency_exists_db(session: Session, code: str) -> bool:
+    """Check if currency already exists in database."""
+    result = session.query(Currency).filter(Currency.code == code).first()
+    if result:
+        return True
+    return False
+
