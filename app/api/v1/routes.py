@@ -5,7 +5,7 @@ from app.api.v1.services import (
     fetch_external_api,
     get_conversion_service,
     add_custom_currency_service, track_real_currency_service, delete_currency_service,
-    update_custom_currency_rate_service,
+    update_custom_currency_rate_service, delete_penultimate_document,
 )
 from app.api.v1.models import DatabaseCurrencyList, CurrencyItem, CurrencyList, ConversionResponse
 
@@ -52,6 +52,7 @@ def add_custom_currency(code: str, rate_usd: float):
     """
     add_custom_currency_service(code.upper(), rate_usd)
     fetch_external_api()
+    delete_penultimate_document()
     return get_available_currencies_service()
 
 

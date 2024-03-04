@@ -16,6 +16,7 @@ from app.database import (
 def get_available_currencies_service() -> DatabaseCurrencyList:
     """Lists tracked currencies."""
     fetch_external_api()
+    delete_penultimate_document()
     last_doc = get_last_updated_document(currency_rate_collection)
     del last_doc["_id"]
     obj = DatabaseCurrencyList(**last_doc)
@@ -28,6 +29,14 @@ def fetch_external_api() -> None:
         currency_rate_collection, tracked_currencies_collection
     )
     return None
+
+
+def delete_penultimate_document() -> None:
+    last_two_documents = currency_rate_collection.find().sort([("_id", -1)]).limit(2)
+
+    last_two_documents_list = list(last_two_documents)
+    penultimate_document = last_two_documents_list[1].get("_id")
+    currency_rate_collection.delete_one({"_id": penultimate_document})
 
 
 def get_conversion_service(source_currency: str, target_currency: str) -> float:
@@ -49,6 +58,7 @@ def get_conversion_service(source_currency: str, target_currency: str) -> float:
         raise HTTPException(status_code=400, detail=f"Currency with code={target_currency} is not being tracked")
     if obj.update_time < datetime.now().astimezone(pytz.utc) - timedelta(minutes=2):
         fetch_external_api()
+        delete_penultimate_document()
     cl = obj.return_currency_list_obj()
     dic = cl.get_currency_rate()
 
@@ -119,6 +129,7 @@ def track_real_currency_service(code: str) -> None:
     currency_list.append(new_currency)
     tracked_currencies_collection.insert_one(updated_currencies)
     fetch_external_api()
+    delete_penultimate_document()
 
 
 def delete_currency_service(code: str):
@@ -137,6 +148,7 @@ def delete_currency_service(code: str):
     tracked_currencies_collection.insert_one(updated_currencies)
     fetch_external_api()
     updated_currencies_obj = get_available_currencies_service()
+    delete_penultimate_document()
     return updated_currencies_obj
 
 
@@ -145,5 +157,6 @@ def update_custom_currency_rate_service(code: str, usd_rate: float):
     delete_currency_service(code)
     add_custom_currency_service(code, usd_rate)
     fetch_external_api()
+    delete_penultimate_document()
     updated_currencies_obj = get_available_currencies_service()
     return updated_currencies_obj
